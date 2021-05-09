@@ -4,7 +4,8 @@
 void cart_load(gameboy* gb, char* rom_path)
 {
 	FILE* rom = fopen(rom_path, "rb");
-	if (rom == NULL) {
+	if (rom == NULL) 
+	{
 		printf("Error opening ROM");
 		exit(-1);
 	}

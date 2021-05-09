@@ -7,7 +7,8 @@
 #include "ppu.h";
 #include "event.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
 	if (argc < 2)
 	{
 		printf("Usage: %s <rom.gb>", argv[0]);

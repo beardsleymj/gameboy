@@ -10,7 +10,8 @@ static GLubyte* image; // RGB Storage
 static GLuint m_tex; // texture map
 static GLuint fbo; // frame buffer object
 
-void renderer_init() {
+void renderer_init() 
+{
     scale = 4;
     image = calloc((160 * scale) * (144 * scale) * 3, 1);
 
@@ -62,15 +63,19 @@ void render(gameboy* gb)
     SDL_GL_SwapWindow(window);
 
         GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
+    while ((err = glGetError()) != GL_NO_ERROR) 
+    {
         printf("error: %s ", glewGetErrorString(err));
     }
 }
 
-void fill_image(gameboy* gb) {
+void fill_image(gameboy* gb) 
+{
 
-    for (int i = 0; i < (144 * scale); i++) {
-        for (int j = 0; j < (160 * scale * 3); j += 3) {
+    for (int i = 0; i < (144 * scale); i++) 
+    {
+        for (int j = 0; j < (160 * scale * 3); j += 3) 
+        {
             image[(i * 160 * scale * 3) + j] = gb->screen[i / scale][(j / 3) / scale][0];
             image[(i * 160 * scale * 3) + j + 1] = gb->screen[i / scale][(j / 3) / scale][1];
             image[(i * 160 * scale * 3) + j + 2] = gb->screen[i / scale][(j / 3) / scale][2];
