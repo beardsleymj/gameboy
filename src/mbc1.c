@@ -65,9 +65,6 @@ void mbc1_write_byte(gameboy* gb, uint16_t address, uint8_t value)
 	}
 	else if (address >= 0x6000 && address <= 0x7FFF)
 	{	// banking mode select
-		if (value == simple)
-			gb->banking_mode = simple;
-		if (value == advanced)
-			gb->banking_mode = advanced;
+		gb->banking_mode = value;
 	}
 }
