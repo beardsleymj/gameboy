@@ -33,8 +33,6 @@ void render()
 {
     gb.draw_frame = false;
 
-    // TODO: this falls behind because elapsed > next_frame_ms quite often,
-    // will probably try to sync to audio later
     if (cap_framerate)
     {
         u32 next_frame_ms = next_frame / 1000;

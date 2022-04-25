@@ -1,5 +1,5 @@
 #include "gb.h"
-#include "cart.h"
+#include "mbc/cart.h"
 
 void gb_init(char* rom_path, bool bootrom)
 {

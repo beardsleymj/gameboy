@@ -34,8 +34,6 @@
 #define OAM_START 0xFE00
 #define OAM_END 0xFE9F
 
-typedef enum banking_modes { simple, advanced } banking_modes;
-
 typedef struct gameboy 
 {
 	bool cbg;

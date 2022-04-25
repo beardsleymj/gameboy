@@ -20,27 +20,28 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\apu.c" />
-    <ClCompile Include="src\cart.c" />
+    <ClCompile Include="src\mbc\cart.c" />
     <ClCompile Include="src\cpu.c" />
     <ClCompile Include="src\event.c" />
     <ClCompile Include="src\gb.c" />
     <ClCompile Include="src\cpu_instr.c" />
     <ClCompile Include="src\main.c" />
-    <ClCompile Include="src\mbc1.c" />
+    <ClCompile Include="src\mbc\mbc1.c" />
     <ClCompile Include="src\bus.c" />
-    <ClCompile Include="src\mbc3.c" />
+    <ClCompile Include="src\mbc\mbc2.c" />
+    <ClCompile Include="src\mbc\mbc3.c" />
     <ClCompile Include="src\ppu.c" />
     <ClCompile Include="src\renderer.c" />
     <ClCompile Include="src\timers.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\apu.h" />
-    <ClInclude Include="src\cart.h" />
+    <ClInclude Include="src\mbc\cart.h" />
     <ClInclude Include="src\cpu.h" />
     <ClInclude Include="src\event.h" />
     <ClInclude Include="src\gb.h" />
     <ClInclude Include="src\cpu_instr.h" />
-    <ClInclude Include="src\mbc.h" />
+    <ClInclude Include="src\mbc\mbc.h" />
     <ClInclude Include="src\bus.h" />
     <ClInclude Include="src\ppu.h" />
     <ClInclude Include="src\renderer.h" />

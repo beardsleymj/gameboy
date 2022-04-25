@@ -1,6 +1,6 @@
 #include "bus.h"
 #include "timers.h"
-#include "cart.h"
+#include "mbc/cart.h"
 
 u8 read_byte(u16 address) 
 {
@@ -267,6 +267,8 @@ void dma_transfer()
 
 u8 read_joyp()
 {
+		update_gb_keystate();
+
 		if (!gb.joyp.action && gb.joyp.direction)
 		{
 			gb.joyp.down_start = gb.start;
@@ -281,5 +283,6 @@ u8 read_joyp()
 			gb.joyp.left_b = gb.left;
 			gb.joyp.right_a = gb.right;
 		}
+
 		return gb.joyp.raw | 0b11110000;
 }

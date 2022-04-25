@@ -6,6 +6,8 @@
 #include "renderer.h"
 #include "ppu.h";
 #include "event.h"
+#include "apu.h"
+#include "mbc/cart.h"
 
 gameboy_t gb;
 
@@ -37,6 +39,7 @@ int main(int argc, char** argv)
 
 	gb_init(argv[1], bootrom);
 	renderer_init();
+	test_audio();
 
 	FILE* log_file = 0;
 	if (debug)
@@ -55,9 +58,14 @@ int main(int argc, char** argv)
 		cpu_run();
 		ppu_run();
 		sync_timing();
-		if (gb.draw_frame == true)
+		if (gb.draw_frame)
+		{
+			quit = handle_event(&event);
 			render();
-		quit = handle_event(&event);
+		}
+
+
+
 	}
 
 	if (debug)

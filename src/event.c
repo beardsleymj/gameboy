@@ -27,21 +27,10 @@ bool handle_event(SDL_Event* event)
 		}
 	}
 
-
-	u8* state = SDL_GetKeyboardState(NULL);
-	gb.b = !state[SDL_SCANCODE_Z];
-	gb.a = !state[SDL_SCANCODE_X];
-	gb.up = !state[SDL_SCANCODE_UP];
-	gb.down = !state[SDL_SCANCODE_DOWN];
-	gb.left = !state[SDL_SCANCODE_LEFT];
-	gb.right = !state[SDL_SCANCODE_RIGHT];
-	gb.start = !state[SDL_SCANCODE_C];
-	gb.select = !state[SDL_SCANCODE_V];
-
 	return 0;
 }
 
-u8 get_joyp()
+void update_gb_keystate()
 {
 	u8* state = SDL_GetKeyboardState(NULL);
 	gb.b = !state[SDL_SCANCODE_Z];

@@ -66,7 +66,7 @@ u8 read_tima()
 	return gb.tima;
 }
 
-// Writing to tima resets the entire timer regiester
+// Writing to tima resets the entire timer regiester supposedly 
 u8 write_tima(u8 value)
 {
 	gb.tima = value;

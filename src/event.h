@@ -4,3 +4,4 @@
 #include <SDL.h>
 
 bool handle_event(SDL_Event*);
+void update_gb_keystate();

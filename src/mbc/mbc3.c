@@ -1,7 +1,5 @@
 #include "mbc.h"
 
-// very unfinished pokemon crash
-
 u8 mbc3_read(u16 address)
 {
 	if (address >= 0x0000 && address <= 0x3FFF)
@@ -52,6 +50,7 @@ void mbc3_write(u16 address, u8 value)
 		{
 			if (cart.bank2_reg < cart.ram_banks)
 				cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)] = value;
+			
 		}
 	}
 }

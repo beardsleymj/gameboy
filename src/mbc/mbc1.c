@@ -38,16 +38,6 @@ void mbc1_write(u16 address, u8 value)
 	{	
 		cart.ram_bank_enable = (value & 0x0A) == 0x0A;
 	}
-	else if (address >= 0xA000 && address <= 0xBFFF && cart.ram_bank_enable == true)
-	{	// RAM write
-		if (cart.banking_mode == simple || cart.ram_banks == 1)
-			cart.sram[address & 0x1FFF] = value;
-		else if (cart.banking_mode == advanced)
-		{
-			if (cart.bank2_reg < cart.ram_banks)
-				cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)] = value;
-		}
-	}
 	else if (address >= 0x2000 && address <= 0x3FFF)
 	{	// bank 1 register
 		cart.bank1_reg = (value & 0x1F);
@@ -61,5 +51,15 @@ void mbc1_write(u16 address, u8 value)
 	else if (address >= 0x6000 && address <= 0x7FFF)
 	{	// banking mode select
 		cart.banking_mode = (value & 1);
+	}
+	else if (address >= 0xA000 && address <= 0xBFFF && cart.ram_bank_enable == true)
+	{	// RAM write
+		if (cart.banking_mode == simple || cart.ram_banks == 1)
+			cart.sram[address & 0x1FFF] = value;
+		else if (cart.banking_mode == advanced)
+		{
+			if (cart.bank2_reg < cart.ram_banks)
+				cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)] = value;
+		}
 	}
 }

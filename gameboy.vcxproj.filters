@@ -23,7 +23,7 @@
     <ClCompile Include="src\bus.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mbc1.c">
+    <ClCompile Include="src\mbc\mbc1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.c">
@@ -38,16 +38,19 @@
     <ClCompile Include="src\cpu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\cart.c">
+    <ClCompile Include="src\mbc\cart.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\cpu_instr.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mbc3.c">
+    <ClCompile Include="src\mbc\mbc3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\apu.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mbc\mbc2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,7 +67,7 @@
     <ClInclude Include="src\bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mbc.h">
+    <ClInclude Include="src\mbc\mbc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\cpu_instr.h">
@@ -79,7 +82,7 @@
     <ClInclude Include="src\cpu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\cart.h">
+    <ClInclude Include="src\mbc\cart.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\types.h">
