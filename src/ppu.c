@@ -2,284 +2,305 @@
 #include <stdlib.h>
 #include "ppu.h"
 
-void ppu_run(gameboy* gb) 
+void ppu_run() 
 {	
-	if (gb->ppu_cycles <= gb->cycles) 
+	if (gb.ppu_cycles <= gb.cycles) 
 	{
-		switch (gb->ppu_next_mode) 
+		switch (gb.ppu_next_mode) 
 		{
-			case 0:	hblank(gb);	break;
-			case 1:	vblank(gb);	break;
-			case 2:	oam_search(gb);	break;
-			case 3:	draw_scanline(gb);	break;
+			case 0:	hblank();	break;
+			case 1:	vblank();	break;
+			case 2:	oam_search();	break;
+			case 3:	draw_scanline();	break;
 		}
 	}
 }
 
 // Mode 0
-void hblank(gameboy* gb) 
+void hblank() 
 {
-	gb->stat->mode_flag = 0;
-	if (gb->mem[LY] == 143)
-		gb->ppu_next_mode = 1;
+	gb.stat.mode_flag = 0;
+	if (gb.ly == 143)
+		gb.ppu_next_mode = 1;
 	else 
-		gb->ppu_next_mode = 2;
-	if (gb->interrupt_enable->stat && gb->stat->hblank_int_enable)
-		gb->interrupt_flag->stat = 1;
-	gb->ppu_cycles += 204;
-	gb->mem[LY]++;
-	gb->stat->lyc_ly_flag = gb->mem[LY] == gb->mem[LYC];
-	if (gb->interrupt_enable->stat && gb->stat->lyc_ly_int_enable && gb->stat->lyc_ly_flag)
-		gb->interrupt_flag->stat = 1;
+		gb.ppu_next_mode = 2;
+	if (gb.stat.hblank_int_enable)
+		gb.interrupt_flag.stat = 1;
+	gb.ppu_cycles += 204;
+	increment_ly();
 }
 
 // Mode 1
-void vblank(gameboy* gb) 
+void vblank() 
 {
-	if (gb->vblanks == 0) 
+	if (gb.vblanks == 0) 
 	{
-		gb->draw_frame = 1;
-		gb->stat->mode_flag = 1;
-		if (gb->interrupt_enable->stat && gb->stat->vblank_int_enable)
-			gb->interrupt_flag->stat = 1;
-		if (gb->interrupt_enable->vblank)
-			gb->interrupt_flag->vblank = 1;
-		gb->vblanks++;
+		gb.draw_frame = 1;
+		gb.stat.mode_flag = 1;
+		if (gb.stat.vblank_int_enable)
+			gb.interrupt_flag.stat = 1;
+		gb.interrupt_flag.vblank = 1;
+		gb.vblanks++;
 	}
 	else 
 	{
-		gb->mem[LY]++;
-			gb->stat->lyc_ly_flag = gb->mem[LY] == gb->mem[LYC];
-		if (gb->interrupt_enable->stat && gb->stat->lyc_ly_int_enable && gb->stat->lyc_ly_flag)
-			gb->interrupt_flag->stat = 1;
-		if (gb->mem[LY] == 154) 
+		increment_ly();
+		if (gb.ly == 154) 
 		{
-			gb->ppu_next_mode = 2;
-			gb->vblanks = 0;
+			gb.ppu_next_mode = 2;
+			gb.vblanks = 0;
 		}
 	}
-	gb->ppu_cycles += 456;
+	gb.ppu_cycles += 456;
 }
 
 // Mode 2
-void oam_search(gameboy* gb) 
+void oam_search() 
 {
-	gb->stat->mode_flag = 2;
-	gb->ppu_next_mode = 3;
-	if (gb->interrupt_enable->stat && gb->stat->oam_int_enable)
-		gb->interrupt_flag->stat = 1;
-	gb->ppu_cycles += 80;
+	gb.stat.mode_flag = 2;
+	gb.ppu_next_mode = 3;
+	if (gb.stat.oam_int_enable)
+		gb.interrupt_flag.stat = 1;
+	gb.ppu_cycles += 80;
 
-	if (gb->mem[LY] > 143) 
+	if (gb.ly > 143) 
 	{
-		gb->window_internal_line_counter = 0;
-		gb->mem[LY] = 0;
-		gb->stat->lyc_ly_flag = gb->mem[LY] == gb->mem[LYC];
-		if (gb->interrupt_enable->stat && gb->stat->lyc_ly_int_enable && gb->stat->lyc_ly_flag)
-			gb->interrupt_flag->stat = 1;
+		gb.window_internal_line_counter = 0;
+		gb.ly = 0;
+		gb.stat.lyc_ly_flag = gb.ly == gb.lyc;
+		if (gb.stat.lyc_ly_int_enable && gb.stat.lyc_ly_flag)
+			gb.interrupt_flag.stat = 1;
 	}
 	
-	gb->oam_buffer_size = 0;
-	for (uint16_t loc = OAM_START; loc < OAM_END; loc += 4)	
+	gb.oam_buffer_size = 0;
+	for (u16 loc = 0; loc < 0xA0; loc += 4)	
 	{
-		sprite current_sprite;
-		memcpy(&current_sprite, &gb->mem[loc], 4);
-		uint8_t sprite_height = 8 + (gb->lcdc->obj_size * 8); // lcdc bit 2 for sprite height 0 = 8px, 1 = 16px
-		if ((current_sprite.x_pos > 0) && (gb->mem[LY] + 16 >= current_sprite.y_pos) && (gb->mem[LY] + 16 < current_sprite.y_pos + sprite_height) && gb->oam_buffer_size < 10) 
+		sprite* current_sprite = &gb.oam[loc];
+		u8 sprite_height = 8 + (gb.lcdc.obj_size * 8); // lcdc bit 2 for sprite height 0 = 8px, 1 = 16px
+		if ((gb.ly + 16 >= current_sprite->y_pos) && (gb.ly + 16 < current_sprite->y_pos + sprite_height)) 
 		{
-			for (int i = 0; i < gb->oam_buffer_size; i++) 
-			{
-				if (gb->oam_buffer[i].x_pos == current_sprite.x_pos)
-					current_sprite.x_pos = 0;
-			}
-			gb->oam_buffer[gb->oam_buffer_size++] = current_sprite;
+			gb.oam_buffer[gb.oam_buffer_size++] = *current_sprite;
+		}
+
+		if (gb.oam_buffer_size == 10)
+		{
+			break;
 		}
 	}
-	qsort(&gb->oam_buffer, gb->oam_buffer_size, sizeof(sprite), (*sprite_compare));
 }
 
-int sprite_compare(sprite* sprite1, sprite* sprite2) 
+ //Mode 3
+ void draw_scanline() 
 {
-	return (int16_t)sprite1->x_pos - sprite2->x_pos;
+	 gb.stat.mode_flag = 3;
+	 gb.ppu_next_mode = 0;
+	 gb.ppu_cycles += 172;
+
+	 u8 scanline[160] = { 0 };
+
+	 if (gb.lcdc.lcd_enable)
+	 {
+		 if (gb.lcdc.bg_win_enable)
+			 draw_bg(&scanline);
+
+		 if (gb.lcdc.obj_enable)
+			 draw_obj(&scanline);
+	 }
+
+	 fill_buffer(&scanline);
 }
 
-// Mode 3
-void draw_scanline(gameboy* gb) 
+void draw_bg(u8 *scanline)
 {
-	gb->stat->mode_flag = 3;
-	gb->ppu_next_mode = 0;
-	gb->ppu_cycles += 172;
+	u16 line_offset = ((gb.scx) / 8) & 0x1F;
+	u16 window_map_addr = gb.lcdc.win_tile_map ? 0x1C00 : 0x1800;
+	u16 window_map_offset = 0;
+	u8 win_tile_col;
+	u16 bg_map_addr = gb.lcdc.bg_tile_map ? 0x1C00 : 0x1800;
+	s16 bg_map_offset =  32 * (((gb.ly + gb.scy) & 0xFF) / 8);
 
-	uint16_t background_map_address = (gb->lcdc->bg_tile_map) ? 0x9C00 : 0x9800;
-	uint16_t background_map_offset = 32 * (((gb->mem[LY] + gb->mem[SCY]) & 0xFF) / 8);
-	uint16_t line_offset = ((gb->mem[SCX]) / 8) & 0x1F;
-	uint16_t tile_row = 2 * ((gb->mem[LY] + gb->mem[SCY]) % 8);
-	uint16_t tile_col = (gb->mem[SCX]) & 7;
-	uint16_t window_map_address = (gb->lcdc->win_tile_map) ? 0x9C00 : 0x9800;
-	uint16_t window_map_offset = 0;
-	uint8_t win_tile_col;
-	uint8_t bg_tile_number;
-	uint16_t bg_tile_data_offset = (gb->lcdc->tile_data_loc) ? 0x8000 : 0x9000;
-	uint16_t bg_tile_address;
+	u16 tile_col = (gb.scx) & 7;
+	u16 tile_row = 2 * ((gb.ly + gb.scy) % 8);
 
-	uint8_t oam_pos = 0;
-	sprite cur_sprite;
-	uint8_t sprite_tile_number;
-	uint8_t sprite_tile_data_offset;
-	uint16_t sprite_tile_address;
-	uint8_t sprite_row = 0;
-	uint8_t sprite_col = 0;
-	uint8_t sprite_pixels_drawn = 0;
+	gb.window_draw_flag = 0;
 
-	uint8_t bg_data1;
-	uint8_t bg_data2;
-	uint8_t sprite_data1;
-	uint8_t sprite_data2;
+	for (u8 i = 0; i < 160; i++)
+	{
 
-	uint8_t color = 0;
-	uint8_t sprite_color;
-	uint8_t color_data = 0;
-	uint8_t sprite_color_data = 0;
-	uint8_t red = 0;
-	uint8_t green = 0;
-	uint8_t blue = 0;
-
-	if (gb->lcdc->win_enable)
-		line_offset = 0;
-
-	gb->window_draw_flag = 0;
-
-	for (int16_t i = 0; i < 160; i++) 
-	{	
-		// BG and Window enable
-		if (gb->lcdc->bg_win_prio == 0) 
+		u8 tile_number;
+		// determines whether to use the bg / window tilemap and gets the tile number
+		if (i + 7 >= gb.wx && gb.ly >= gb.wy && gb.lcdc.win_enable)
 		{
-			red = 0xFF;
-			green = 0xff;
-			blue = 0xff;
+			if (gb.window_draw_flag == 0)
+			{
+				tile_col = 0;
+				tile_row = 2 * (gb.window_internal_line_counter % 8);
+				gb.window_draw_flag = 1;
+			}
+			tile_number = gb.vram[window_map_addr + ((i + 7 - gb.wx) / 8) + (((gb.window_internal_line_counter) / 8) * 32)];
 		}
-		else 
-		{	// window 
-			if (i + 7 >= gb->mem[WX] && gb->mem[LY] >= gb->mem[WY] && gb->lcdc->win_enable) 
-			{
-				if (gb->window_draw_flag == 0) 
-				{
-					tile_col = 0;
-					tile_row = 2 * (gb->window_internal_line_counter % 8);
-					gb->window_draw_flag = 1;
-				}
-				bg_tile_number = gb->mem[window_map_address + ((i + 7 - gb->mem[WX]) / 8) + (((gb->window_internal_line_counter ) / 8) * 32)]; 
-			}
-			else 
-			{ // Background
-				bg_tile_number = gb->mem[background_map_address + background_map_offset + line_offset];
-			}
-				// background / window tile addressing method
-			if (gb->lcdc->tile_data_loc) // $8000 method
-				bg_tile_address = bg_tile_data_offset + (bg_tile_number * 16);
-			else // $8800 method
-				bg_tile_address = bg_tile_data_offset + ((int8_t)bg_tile_number * 16);
-			
-			// get background / window tile data
-			bg_data1 = gb->mem[bg_tile_address + tile_row];
-			bg_data2 = gb->mem[bg_tile_address + tile_row + 1];
-
-			color_data = ((bg_data1 >> (7 - tile_col)) & 1) | (((bg_data2 >> (7 - tile_col)) & 1) << 1);
-
-			// Get color using background palette
-			switch (color_data) 
-			{
-				case 0: color = ((gb->mem[BGP] & 0b00000011) >> 0); break;
-				case 1: color = ((gb->mem[BGP] & 0b00001100) >> 2); break;
-				case 2: color = ((gb->mem[BGP] & 0b00110000) >> 4); break;
-				case 3: color = ((gb->mem[BGP] & 0b11000000) >> 6); break;
-			}
-
-			// sprite
-			cur_sprite = gb->oam_buffer[oam_pos];
-			int16_t sprite_x_offset = cur_sprite.x_pos - i;
-			int16_t sprite_y_offset = 16 - (cur_sprite.y_pos - gb->mem[LY]);
-			if (sprite_x_offset >= 0 && sprite_x_offset < 8 && gb->oam_buffer_size != 0) 
-			{
-				if (sprite_x_offset == 0)
-					oam_pos++;
-				sprite_tile_number = cur_sprite.tile_number;
-
-				if (gb->lcdc->obj_size) 
-				{
-					if (gb->mem[LY] + 8 < cur_sprite.y_pos && !cur_sprite.y_flip)
-						sprite_tile_number = (sprite_tile_number & 0xFE);
-					else
-						sprite_tile_number = (sprite_tile_number & 0xFE) + 1;
-				}
-
-				sprite_tile_address = 0x8000 + (sprite_tile_number * 16);
-
-				if (cur_sprite.y_flip)
-					sprite_y_offset = (7 - sprite_y_offset);
-				sprite_data1 = gb->mem[sprite_tile_address + (sprite_y_offset * 2)];
-				sprite_data2 = gb->mem[sprite_tile_address + (sprite_y_offset * 2) + 1];
-
-				if (cur_sprite.x_flip)
-					sprite_x_offset = 7 - sprite_x_offset;
-				
-				sprite_color_data = ((sprite_data1 >> (sprite_x_offset)) & 1) | (((sprite_data2 >> (sprite_x_offset)) & 1) << 1);
-
-				uint8_t sprite_palette;
-				if (cur_sprite.pallet)
-					sprite_palette = gb->mem[OBP1];
-				else
-					sprite_palette = gb->mem[OBP0];
-				switch (sprite_color_data) 
-				{
-					case 0: sprite_color = ((sprite_palette & 0b00000011) >> 0); break;
-					case 1: sprite_color = ((sprite_palette & 0b00001100) >> 2); break;
-					case 2: sprite_color = ((sprite_palette & 0b00110000) >> 4); break;
-					case 3: sprite_color = ((sprite_palette & 0b11000000) >> 6); break;
-				}
-
-				// pixel mixer
-				if (((sprite_color && !cur_sprite.bg_prio) || (cur_sprite.bg_prio && color == 0)) && gb->lcdc->obj_enable)
-					color = sprite_color;
-			}
-			else 
-			{
-				sprite_color = 0x00;
-			}
-			switch (color) {
-				case 0:
-					red = 0xFF;
-					green = 0xFF;
-					blue = 0xFF;
-					break;
-				case 1:
-					red = 0xAA;
-					green = 0xAA;
-					blue = 0xAA;
-					break;
-				case 2:
-					red = 0x55;
-					green = 0x55;
-					blue = 0x55;
-					break;
-				case 3:
-					red = 0;
-					green = 0;
-					blue = 0;
-					break;
-			}
+		else
+		{ // Background
+			tile_number = gb.vram[bg_map_addr + bg_map_offset + line_offset];
 		}
 
-		gb->screen[143 - gb->mem[LY]][i][0] = red;
-		gb->screen[143 - gb->mem[LY]][i][1] = green;
-		gb->screen[143 - gb->mem[LY]][i][2] = blue;
+		u16 tile_address;
+		// start of tile data in vram based on addressing method
+		if (gb.lcdc.tile_data_area) // $8000 method
+			tile_address = (tile_number * 16);
+		else // $8800 method
+			tile_address = 0x1000 + ((s8)tile_number * 16);
+
+		// 1 row of color data
+		u8 bg_data1 = gb.vram[tile_address + tile_row];
+		u8 bg_data2 = gb.vram[tile_address + tile_row + 1];
+
+		u8 color_number = ((bg_data1 >> (7 - tile_col)) & 1) | (((bg_data2 >> (7 - tile_col)) & 1) << 1);
+
+		// Get color using background palette
+		u8 color = 0;
+		switch (color_number)
+		{
+			case 0: color = ((gb.bgp & 0b00000011) >> 0); break;
+			case 1: color = ((gb.bgp & 0b00001100) >> 2); break;
+			case 2: color = ((gb.bgp & 0b00110000) >> 4); break;
+			case 3: color = ((gb.bgp & 0b11000000) >> 6); break;
+		}
+		
+		scanline[i] = color;
 
 		tile_col++;
 		tile_col %= 8;
 		if (tile_col == 0)
 			line_offset = (line_offset + 1) & 31;
 	}
-	if (gb->window_draw_flag)
-		gb->window_internal_line_counter++;
+
+	if (gb.window_draw_flag)
+		gb.window_internal_line_counter++;
 }
 
+
+
+void draw_obj(u8* scanline)
+{
+	bool prev_obj_pixel[160] = { 0 }; // keeps track of has been drawn by objs
+
+
+	for (u8 i = 0; i < gb.oam_buffer_size; i++)
+	{
+		sprite* cur_sprite = &gb.oam_buffer[i];
+
+		// is onscreen
+		if (cur_sprite->x_pos - 8 < 0 && cur_sprite->x_pos - 8 > 160)
+		{
+			continue;
+		}
+
+		for (u8 j = 0; j < 8; j++)
+		{
+			// for double tiles the first bit is zerod
+			u8 sprite_tile_number = gb.lcdc.obj_size ? cur_sprite->tile_number & 0xFE : cur_sprite->tile_number;
+
+			// check if the pixel will be on screen
+			if (cur_sprite->x_pos - j - 1 < 0 || cur_sprite->x_pos - j - 1 > 159)
+			{
+				continue;
+			}
+
+			// there is already an obj pixel at this location
+			if (prev_obj_pixel[cur_sprite->x_pos - j - 1] == true)
+			{
+				continue;
+			}
+
+			u8 sprite_x_offset = cur_sprite->x_flip ? 7 - j : j;
+			u8 sprite_y_offset = 16 - (cur_sprite->y_pos - gb.ly);
+
+			if (cur_sprite->y_flip)
+			{
+				if (gb.lcdc.obj_size)
+					sprite_y_offset = (15 - sprite_y_offset);
+				else
+					sprite_y_offset = (7 - sprite_y_offset);
+			}
+
+			u16 sprite_tile_address = (sprite_tile_number * 16);
+
+			u8 sprite_data1 = gb.vram[sprite_tile_address + (sprite_y_offset * 2)];
+			u8 sprite_data2 = gb.vram[sprite_tile_address + (sprite_y_offset * 2) + 1];
+
+			u8 sprite_color_data = ((sprite_data1 >> (sprite_x_offset)) & 1) | (((sprite_data2 >> (sprite_x_offset)) & 1) << 1);
+
+			u8 sprite_palette;
+			
+			if (cur_sprite->palette == 1)
+				sprite_palette = gb.obp1;
+			else
+				sprite_palette = gb.obp0;
+
+			u8 sprite_color = 0;
+
+			switch (sprite_color_data)
+			{
+				case 0: continue; // always transparent
+				case 1: sprite_color = ((sprite_palette & 0b00001100) >> 2); break;
+				case 2: sprite_color = ((sprite_palette & 0b00110000) >> 4); break;
+				case 3: sprite_color = ((sprite_palette & 0b11000000) >> 6); break;
+			}
+
+			prev_obj_pixel[cur_sprite->x_pos - j - 1] = true;
+
+			if (!(sprite_color_data == 0 || ((cur_sprite->bg_prio && scanline[cur_sprite->x_pos - j - 1]) != 0)))
+			{
+				scanline[cur_sprite->x_pos - j - 1] = sprite_color;
+			}
+		}
+	}
+}
+
+
+void fill_buffer(u8* scanline)
+{
+	u8 r = 0;
+	u8 g = 0;
+	u8 b = 0;
+
+	for (s64 i = 0; i < 160; i++)
+	{
+		switch (scanline[i])
+		{
+			case 0:
+				r = 0xFF;
+				g = 0xFF;
+				b = 0xFF;
+				break;
+			case 1:
+				r = 0xAA;
+				g = 0xAA;
+				b = 0xAA;
+				break;
+			case 2:
+				r = 0x55;
+				g = 0x55;
+				b = 0x55;
+				break;
+			case 3:
+				r = 0;
+				g = 0;
+				b = 0;
+				break;
+		}
+
+		gb.screen_buffer[143 - gb.ly][i][0] = r;
+		gb.screen_buffer[143 - gb.ly][i][1] = g;
+		gb.screen_buffer[143 - gb.ly][i][2] = b;
+	}
+}
+
+void increment_ly()
+{
+	gb.ly++;
+	gb.stat.lyc_ly_flag = gb.ly == gb.lyc;
+	if (gb.stat.lyc_ly_int_enable && gb.stat.lyc_ly_flag)
+		gb.interrupt_flag.stat = 1;
+}

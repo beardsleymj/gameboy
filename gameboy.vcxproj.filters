@@ -11,7 +11,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\timing.c">
+    <ClCompile Include="src\timers.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer.c">
@@ -20,16 +20,13 @@
     <ClCompile Include="src\ppu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mem.c">
+    <ClCompile Include="src\bus.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mbc1.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\irqs.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gb.c">
@@ -44,12 +41,18 @@
     <ClCompile Include="src\cart.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\instructions.c">
+    <ClCompile Include="src\cpu_instr.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mbc3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\apu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\timing.h">
+    <ClInclude Include="src\timers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer.h">
@@ -58,16 +61,13 @@
     <ClInclude Include="src\ppu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mem.h">
+    <ClInclude Include="src\bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mbc1.h">
+    <ClInclude Include="src\mbc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\irqs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\instructions.h">
+    <ClInclude Include="src\cpu_instr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gb.h">
@@ -80,6 +80,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\cart.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\apu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,51 +1,74 @@
 #include <SDL.h>
 #include "gb.h"
-#include "mem.h"
+#include "bus.h"
 #include "cpu.h"
-#include "timing.h"
+#include "timers.h"
 #include "renderer.h"
 #include "ppu.h";
 #include "event.h"
 
+gameboy_t gb;
+
 int main(int argc, char** argv) 
 {
+	bool bootrom = false;
+	bool debug = false;
+
 	if (argc < 2)
 	{
 		printf("Usage: %s <rom.gb>", argv[0]);
 		return 1;
 	}
 
-	gameboy* gb = calloc(sizeof(gameboy), 1);
+	for (int i = 2; i < argc; i++)
+	{
+		switch (argv[i][1])
+		{
+			case 'b':
+				printf("BOOTROM ON\n");
+				bootrom = true;
+				break;
+			case 'd':
+				printf("DEBUG ON\n");
+				debug = true;
+				break;
+		}
+	}
 
-	gb_init(gb, argv[1]);
+	gb_init(argv[1], bootrom);
 	renderer_init();
 
 	FILE* log_file = 0;
-	log_file = fopen("output.log", "w");
+	if (debug)
+	{
+		log_file = fopen("output.log", "w");
+	}
 	bool quit = false;
 	SDL_Event event;
-	int instructions = 0;
 	while (quit == false)
 	{
-		print_status(gb, log_file);
-		if (instructions++ % 1000000 == 0)
-			printf("%i\n", instructions);
-		cpu_run(gb);
-		ppu_run(gb);
-		sync_timing(gb);
-		if (gb->draw_frame == true)
-			render(gb);
-		while (SDL_PollEvent(&event));
-		quit = handle_event(gb, &event);
+		if (debug)
+		{
+			print_status(&log_file);
+		}
+
+		cpu_run();
+		ppu_run();
+		sync_timing();
+		if (gb.draw_frame == true)
+			render();
+		quit = handle_event(&event);
 	}
 
-	fclose(log_file);
-	free(gb);
-	SDL_Quit;
+	if (debug)
+	{
+		fclose(log_file);
+	}
+	SDL_Quit();
 }
 
-print_status(gameboy* gb, FILE* f)
+print_status(FILE* f)
 {
-	//fprintf(f, "A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", gb->r.A, gb->r.F, gb->r.B, gb->r.C, gb->r.D, gb->r.E, gb->r.H, gb->r.L, gb->SP, gb->PC, read_byte(gb, gb->PC), read_byte(gb, gb->PC + 1), read_byte(gb, gb->PC + 2), read_byte(gb, gb->PC + 3)); gb->cycles -= 16;
-	//printf("A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", gb->r.A, gb->r.F, gb->r.B, gb->r.C, gb->r.D, gb->r.E, gb->r.H, gb->r.L, gb->SP, gb->PC, read_byte(gb, gb->PC), read_byte(gb, gb->PC + 1), read_byte(gb, gb->PC + 2), read_byte(gb, gb->PC + 3)); gb->cycles -= 16;
+	fprintf(f, "A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", gb.r.A, gb.r.F, gb.r.B, gb.r.C, gb.r.D, gb.r.E, gb.r.H, gb.r.L, gb.SP, gb.PC, read_byte(gb.PC), read_byte(gb.PC + 1), read_byte(gb.PC + 2), read_byte(gb.PC + 3)); gb.cycles -= 16;
+	//printf("A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", gb.r.A, gb.r.F, gb.r.B, gb.r.C, gb.r.D, gb.r.E, gb.r.H, gb.r.L, gb.SP, gb.PC, read_byte(gb.PC), read_byte(gb.PC + 1), read_byte(gb.PC + 2), read_byte(gb.PC + 3)); gb.cycles -= 16;
 }

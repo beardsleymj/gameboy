@@ -1,33 +1,28 @@
-#include "gb.h"
-#include "gb.h"
+#include "mbc.h"
 
-uint8_t mbc1_read_byte(gameboy* gb, uint16_t address)
+// should be working(?)
+
+u8 mbc1_read(u16 address)
 {
 	if (address >= 0x0000 && address <= 0x3FFF)
 	{	// BANK 0
-		if (gb->banking_mode == simple)
-			return gb->rom[address];
-		else // advanced only used for multi cart, this should never be hit usually
-		{
-			uint16_t bank = (gb->bank2_reg << 5) & gb->rom_address_pins_mask;
-			return gb->rom[((bank << 14) | address) ];
-		}
+		return cart.rom[address];
 	}	// BANK 01-nn
 	else if (address >= 0x4000 && address <= 0x7FFF)
 	{
-		uint16_t bank = ((gb->bank2_reg << 5) | (gb->bank1_reg)) & gb->rom_address_pins_mask;
-		return gb->rom[(bank << 14) | (address & 0x3FFF)];
+		u16 bank = ((cart.bank2_reg << 5) | (cart.bank1_reg)) & cart.rom_address_pins_mask;
+		return cart.rom[(bank << 14) | (address & 0x3FFF)];
 	}
 	else if (address >= 0xA000 && address <= 0xBFFF)
 	{
-		if (gb->ram_bank_enable == 0xA)
+		if (cart.ram_bank_enable == true)
 		{		
-			if (gb->banking_mode == simple || gb->ram_banks == 1)
-				return gb->sram[address & 0x1FFF];
-			else if (gb->banking_mode == advanced)
+			if (cart.banking_mode == simple || cart.ram_banks == 1)
+				return cart.sram[address & 0x1FFF];
+			else if (cart.banking_mode == advanced)
 			{
-				if (gb->bank2_reg < gb->ram_banks)
-					return gb->sram[(gb->bank2_reg << 13) | (address & 0x1FFF)];
+				if (cart.bank2_reg < cart.ram_banks)
+					return cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)];
 				else
 					return 0;
 			}
@@ -37,34 +32,34 @@ uint8_t mbc1_read_byte(gameboy* gb, uint16_t address)
 	}
 }
 
-void mbc1_write_byte(gameboy* gb, uint16_t address, uint8_t value)
+void mbc1_write(u16 address, u8 value)
 {
 	if (address >= 0x0000 && address <= 0x1FFF)
 	{	
-		gb->ram_bank_enable = value & 0xF;
+		cart.ram_bank_enable = (value & 0x0A) == 0x0A;
 	}
-	else if (address >= 0xA000 && address <= 0xBFFF && gb->ram_bank_enable == 0xA)
+	else if (address >= 0xA000 && address <= 0xBFFF && cart.ram_bank_enable == true)
 	{	// RAM write
-		if (gb->banking_mode == simple || gb->ram_banks == 1)
-			gb->sram[address & 0x1FFF] = value;
-		else if (gb->banking_mode == advanced)
+		if (cart.banking_mode == simple || cart.ram_banks == 1)
+			cart.sram[address & 0x1FFF] = value;
+		else if (cart.banking_mode == advanced)
 		{
-			if (gb->bank2_reg < gb->ram_banks)
-				gb->sram[(gb->bank2_reg << 13) | (address & 0x1FFF)] = value;
+			if (cart.bank2_reg < cart.ram_banks)
+				cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)] = value;
 		}
 	}
 	else if (address >= 0x2000 && address <= 0x3FFF)
 	{	// bank 1 register
-		gb->bank1_reg = (value & 0x1F);
-		if (gb->bank1_reg == 0)
-			gb->bank1_reg = 1;
+		cart.bank1_reg = (value & 0x1F);
+		if (cart.bank1_reg == 0)
+			cart.bank1_reg = 1;
 	}
 	else if (address >= 0x4000 && address <= 0x5FFF)
 	{	
-		gb->bank2_reg = value & 0x03;
+		cart.bank2_reg = value & 0x03;
 	}
 	else if (address >= 0x6000 && address <= 0x7FFF)
 	{	// banking mode select
-		gb->banking_mode = value;
+		cart.banking_mode = (value & 1);
 	}
 }

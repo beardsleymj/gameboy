@@ -1,5 +1,4 @@
 #pragma once
-#include "gb.h"
+void cpu_run();
+void prefix_cb();
 
-void cpu_run(gameboy*);
-void prefix_cb(gameboy*);
