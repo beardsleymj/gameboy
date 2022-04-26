@@ -1,4 +1,5 @@
 #include "timers.h"
+#include "cpu.h"
 
 static const u16 tac_freq[4] = {1024, 16, 64, 256};
 
@@ -31,7 +32,7 @@ void sync_tima()
 		if (gb.tima == 0xFF)
 		{
 			gb.tima = gb.tma;
-			gb.interrupt_flag.timer = 1;
+			cpu.interrupt_flag.timer = 1;
 		}
 
 		gb.last_tima_cycle += tac_freq[gb.tac.input_clock_select];

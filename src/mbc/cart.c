@@ -1,6 +1,7 @@
 #include "cart.h"
 #include "mbc.h"
 #include <string.h>
+
 cartridge_t cart;
 
 void cart_load(char* rom_path)

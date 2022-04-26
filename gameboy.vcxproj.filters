@@ -29,7 +29,7 @@
     <ClCompile Include="src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\gb.c">
+    <ClCompile Include="src\gb_system.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\event.c">
@@ -53,6 +53,27 @@
     <ClCompile Include="src\mbc\mbc2.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dep\imgui\src\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\imgui\src\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\imgui\src\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\imgui\src\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\imgui\src\imgui_impl_sdl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\imgui_renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="dep\imgui\src\imgui_impl_sdlrenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\timers.h">
@@ -73,7 +94,7 @@
     <ClInclude Include="src\cpu_instr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\gb.h">
+    <ClInclude Include="src\gb_system.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\event.h">
@@ -89,6 +110,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\apu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\imgui_renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dep\imgui\src\imgui_impl_opengl3_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,9 +1,14 @@
 #pragma once
-#include "types.h"
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "types.h"
 
 #define DMG_CLOCK_FREQ 0x400000
 #define DIV_FREQ 0x4000
@@ -34,12 +39,35 @@
 #define OAM_START 0xFE00
 #define OAM_END 0xFE9F
 
+typedef union joypad
+{
+	u8		raw;
+	struct
+	{
+		u8
+			right_a		: 1,
+			left_b		: 1,
+			up_select	: 1,
+			down_start	: 1,
+			direction	: 1,
+			action		: 1;
+	};
+}joypad;
+
+typedef union tac
+{
+	u8	raw;
+	struct
+	{
+		u8
+			input_clock_select	: 2,
+			timer_enable		: 1;
+	};
+} tac;
+
 typedef struct gameboy 
 {
 	bool cbg;
-	registers r;
-	u16 SP;
-	u16 PC;
 	bool IME;
 	u8 ime_delay;
 	bool halt;
@@ -49,11 +77,7 @@ typedef struct gameboy
 	u8 wram[0x2000];	
 	u8 oam[0xA0];
 	u8 hram[0x7F];
-	interrupt_enable interrupt_enable;
-	interrupt_flag interrupt_flag;
-	lcdc lcdc;
-	stat stat;
-	
+
 	// I/O RANGES
 	joypad joyp;
 	u8 sb; // Serial transfer data (R/W)
@@ -65,17 +89,6 @@ typedef struct gameboy
 
 	u8 nr10;
 	u8 audio[0x30]; // probably expand later
-	
-	u8 scy;
-	u8 scx;
-	u8 ly;
-	u8 lyc;
-	u8 dma;
-	u8 wy;
-	u8 wx;
-	u8 bgp;
-	u8 obp0;
-	u8 obp1;
 
 	// timing
 	uint64_t cycles;
@@ -86,15 +99,6 @@ typedef struct gameboy
 	uint64_t last_div_cycle;
 	uint64_t last_tima_cycle;
 	uint32_t input_clock_select[4];
-
-	// ppu
-	u8 vram[0x2000];	// 8000 - 9FFF
-	sprite oam_buffer[40];
-	u8 oam_buffer_size;
-	u8 window_internal_line_counter;
-	u8 window_draw_flag;
-	u8 vblanks;
-	bool draw_frame;
 
 	// input
 	bool up;
@@ -112,3 +116,7 @@ typedef struct gameboy
 extern gameboy_t gb;
 
 void gb_init(char* rom_path, bool bootrom);
+
+#ifdef __cplusplus
+} 
+#endif

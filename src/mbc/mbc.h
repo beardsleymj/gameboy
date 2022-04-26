@@ -1,5 +1,5 @@
 #pragma once
-#include "../gb.h"
+#include "../gb_system.h"
 #include "cart.h"
 
 u8 mbc1_read(u16 address);

@@ -1,19 +1,33 @@
-#include "gb.h"
+#include "gb_system.h"
 #include "event.h"
+#include "renderer.h"
+#include "imgui_renderer.h"
 
-bool handle_event(SDL_Event* event) 
+bool handle_events() 
 {
-	while (SDL_PollEvent(event))
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
 	{
-		switch (event->type)
+		process_imgui_event(&event);
+		switch (event.type)
 		{
+			case SDL_WINDOWEVENT:
+				switch (event.window.event)
+				{	// closing both windows for now, maybe do one later
+					case SDL_WINDOWEVENT_CLOSE:
+						return 1;
+						//SDL_DestroyWindow();
+						break;
+				}
+				break;
+
 			case SDL_QUIT:
 				return 1;
 				break;
 
 			case SDL_KEYDOWN:
 			{
-				switch (event->key.keysym.sym)
+				switch (event.key.keysym.sym)
 				{
 					case SDLK_ESCAPE:
 						return 1;
@@ -26,7 +40,6 @@ bool handle_event(SDL_Event* event)
 			}
 		}
 	}
-
 	return 0;
 }
 

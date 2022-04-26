@@ -1,6 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include "ppu.h"
+#include "cpu.h"
+
+ppu_t ppu;
 
 void ppu_run() 
 {	
@@ -19,13 +22,13 @@ void ppu_run()
 // Mode 0
 void hblank() 
 {
-	gb.stat.mode_flag = 0;
-	if (gb.ly == 143)
+	ppu.stat.mode_flag = 0;
+	if (ppu.ly == 143)
 		gb.ppu_next_mode = 1;
 	else 
 		gb.ppu_next_mode = 2;
-	if (gb.stat.hblank_int_enable)
-		gb.interrupt_flag.stat = 1;
+	if (ppu.stat.hblank_int_enable)
+		cpu.interrupt_flag.stat = 1;
 	gb.ppu_cycles += 204;
 	increment_ly();
 }
@@ -33,22 +36,22 @@ void hblank()
 // Mode 1
 void vblank() 
 {
-	if (gb.vblanks == 0) 
+	if (ppu.vblanks == 0) 
 	{
-		gb.draw_frame = 1;
-		gb.stat.mode_flag = 1;
-		if (gb.stat.vblank_int_enable)
-			gb.interrupt_flag.stat = 1;
-		gb.interrupt_flag.vblank = 1;
-		gb.vblanks++;
+		ppu.draw_frame = 1;
+		ppu.stat.mode_flag = 1;
+		if (ppu.stat.vblank_int_enable)
+			cpu.interrupt_flag.stat = 1;
+		cpu.interrupt_flag.vblank = 1;
+		ppu.vblanks++;
 	}
 	else 
 	{
 		increment_ly();
-		if (gb.ly == 154) 
+		if (ppu.ly == 154) 
 		{
 			gb.ppu_next_mode = 2;
-			gb.vblanks = 0;
+			ppu.vblanks = 0;
 		}
 	}
 	gb.ppu_cycles += 456;
@@ -57,32 +60,32 @@ void vblank()
 // Mode 2
 void oam_search() 
 {
-	gb.stat.mode_flag = 2;
+	ppu.stat.mode_flag = 2;
 	gb.ppu_next_mode = 3;
-	if (gb.stat.oam_int_enable)
-		gb.interrupt_flag.stat = 1;
+	if (ppu.stat.oam_int_enable)
+		cpu.interrupt_flag.stat = 1;
 	gb.ppu_cycles += 80;
 
-	if (gb.ly > 143) 
+	if (ppu.ly > 143) 
 	{
-		gb.window_internal_line_counter = 0;
-		gb.ly = 0;
-		gb.stat.lyc_ly_flag = gb.ly == gb.lyc;
-		if (gb.stat.lyc_ly_int_enable && gb.stat.lyc_ly_flag)
-			gb.interrupt_flag.stat = 1;
+		ppu.window_internal_line_counter = 0;
+		ppu.ly = 0;
+		ppu.stat.lyc_ly_flag = ppu.ly == ppu.lyc;
+		if (ppu.stat.lyc_ly_int_enable && ppu.stat.lyc_ly_flag)
+			cpu.interrupt_flag.stat = 1;
 	}
 	
-	gb.oam_buffer_size = 0;
+	ppu.oam_buffer_size = 0;
 	for (u16 loc = 0; loc < 0xA0; loc += 4)	
 	{
 		sprite* current_sprite = &gb.oam[loc];
-		u8 sprite_height = 8 + (gb.lcdc.obj_size * 8); // lcdc bit 2 for sprite height 0 = 8px, 1 = 16px
-		if ((gb.ly + 16 >= current_sprite->y_pos) && (gb.ly + 16 < current_sprite->y_pos + sprite_height)) 
+		u8 sprite_height = 8 + (ppu.lcdc.obj_size * 8); // lcdc bit 2 for sprite height 0 = 8px, 1 = 16px
+		if ((ppu.ly + 16 >= current_sprite->y_pos) && (ppu.ly + 16 < current_sprite->y_pos + sprite_height)) 
 		{
-			gb.oam_buffer[gb.oam_buffer_size++] = *current_sprite;
+			ppu.oam_buffer[ppu.oam_buffer_size++] = *current_sprite;
 		}
 
-		if (gb.oam_buffer_size == 10)
+		if (ppu.oam_buffer_size == 10)
 		{
 			break;
 		}
@@ -92,18 +95,18 @@ void oam_search()
  //Mode 3
  void draw_scanline() 
 {
-	 gb.stat.mode_flag = 3;
+	 ppu.stat.mode_flag = 3;
 	 gb.ppu_next_mode = 0;
 	 gb.ppu_cycles += 172;
 
 	 u8 scanline[160] = { 0 };
 
-	 if (gb.lcdc.lcd_enable)
+	 if (ppu.lcdc.lcd_enable)
 	 {
-		 if (gb.lcdc.bg_win_enable)
+		 if (ppu.lcdc.bg_win_enable)
 			 draw_bg(&scanline);
 
-		 if (gb.lcdc.obj_enable)
+		 if (ppu.lcdc.obj_enable)
 			 draw_obj(&scanline);
 	 }
 
@@ -112,48 +115,48 @@ void oam_search()
 
 void draw_bg(u8 *scanline)
 {
-	u16 line_offset = ((gb.scx) / 8) & 0x1F;
-	u16 window_map_addr = gb.lcdc.win_tile_map ? 0x1C00 : 0x1800;
+	u16 line_offset = ((ppu.scx) / 8) & 0x1F;
+	u16 window_map_addr = ppu.lcdc.win_tile_map ? 0x1C00 : 0x1800;
 	u16 window_map_offset = 0;
 	u8 win_tile_col;
-	u16 bg_map_addr = gb.lcdc.bg_tile_map ? 0x1C00 : 0x1800;
-	s16 bg_map_offset =  32 * (((gb.ly + gb.scy) & 0xFF) / 8);
+	u16 bg_map_addr = ppu.lcdc.bg_tile_map ? 0x1C00 : 0x1800;
+	s16 bg_map_offset =  32 * (((ppu.ly + ppu.scy) & 0xFF) / 8);
 
-	u16 tile_col = (gb.scx) & 7;
-	u16 tile_row = 2 * ((gb.ly + gb.scy) % 8);
+	u16 tile_col = (ppu.scx) & 7;
+	u16 tile_row = 2 * ((ppu.ly + ppu.scy) % 8);
 
-	gb.window_draw_flag = 0;
+	ppu.window_draw_flag = 0;
 
 	for (u8 i = 0; i < 160; i++)
 	{
 
 		u8 tile_number;
 		// determines whether to use the bg / window tilemap and gets the tile number
-		if (i + 7 >= gb.wx && gb.ly >= gb.wy && gb.lcdc.win_enable)
+		if (i + 7 >= ppu.wx && ppu.ly >= ppu.wy && ppu.lcdc.win_enable)
 		{
-			if (gb.window_draw_flag == 0)
+			if (ppu.window_draw_flag == 0)
 			{
 				tile_col = 0;
-				tile_row = 2 * (gb.window_internal_line_counter % 8);
-				gb.window_draw_flag = 1;
+				tile_row = 2 * (ppu.window_internal_line_counter % 8);
+				ppu.window_draw_flag = 1;
 			}
-			tile_number = gb.vram[window_map_addr + ((i + 7 - gb.wx) / 8) + (((gb.window_internal_line_counter) / 8) * 32)];
+			tile_number = ppu.vram[window_map_addr + ((i + 7 - ppu.wx) / 8) + (((ppu.window_internal_line_counter) / 8) * 32)];
 		}
 		else
 		{ // Background
-			tile_number = gb.vram[bg_map_addr + bg_map_offset + line_offset];
+			tile_number = ppu.vram[bg_map_addr + bg_map_offset + line_offset];
 		}
 
 		u16 tile_address;
 		// start of tile data in vram based on addressing method
-		if (gb.lcdc.tile_data_area) // $8000 method
+		if (ppu.lcdc.tile_data_area) // $8000 method
 			tile_address = (tile_number * 16);
 		else // $8800 method
 			tile_address = 0x1000 + ((s8)tile_number * 16);
 
 		// 1 row of color data
-		u8 bg_data1 = gb.vram[tile_address + tile_row];
-		u8 bg_data2 = gb.vram[tile_address + tile_row + 1];
+		u8 bg_data1 = ppu.vram[tile_address + tile_row];
+		u8 bg_data2 = ppu.vram[tile_address + tile_row + 1];
 
 		u8 color_number = ((bg_data1 >> (7 - tile_col)) & 1) | (((bg_data2 >> (7 - tile_col)) & 1) << 1);
 
@@ -161,10 +164,10 @@ void draw_bg(u8 *scanline)
 		u8 color = 0;
 		switch (color_number)
 		{
-			case 0: color = ((gb.bgp & 0b00000011) >> 0); break;
-			case 1: color = ((gb.bgp & 0b00001100) >> 2); break;
-			case 2: color = ((gb.bgp & 0b00110000) >> 4); break;
-			case 3: color = ((gb.bgp & 0b11000000) >> 6); break;
+			case 0: color = ((ppu.bgp & 0b00000011) >> 0); break;
+			case 1: color = ((ppu.bgp & 0b00001100) >> 2); break;
+			case 2: color = ((ppu.bgp & 0b00110000) >> 4); break;
+			case 3: color = ((ppu.bgp & 0b11000000) >> 6); break;
 		}
 		
 		scanline[i] = color;
@@ -175,8 +178,8 @@ void draw_bg(u8 *scanline)
 			line_offset = (line_offset + 1) & 31;
 	}
 
-	if (gb.window_draw_flag)
-		gb.window_internal_line_counter++;
+	if (ppu.window_draw_flag)
+		ppu.window_internal_line_counter++;
 }
 
 
@@ -186,9 +189,9 @@ void draw_obj(u8* scanline)
 	bool prev_obj_pixel[160] = { 0 }; // keeps track of has been drawn by objs
 
 
-	for (u8 i = 0; i < gb.oam_buffer_size; i++)
+	for (u8 i = 0; i < ppu.oam_buffer_size; i++)
 	{
-		sprite* cur_sprite = &gb.oam_buffer[i];
+		sprite* cur_sprite = &ppu.oam_buffer[i];
 
 		// is onscreen
 		if (cur_sprite->x_pos - 8 < 0 && cur_sprite->x_pos - 8 > 160)
@@ -199,7 +202,7 @@ void draw_obj(u8* scanline)
 		for (u8 j = 0; j < 8; j++)
 		{
 			// for double tiles the first bit is zerod
-			u8 sprite_tile_number = gb.lcdc.obj_size ? cur_sprite->tile_number & 0xFE : cur_sprite->tile_number;
+			u8 sprite_tile_number = ppu.lcdc.obj_size ? cur_sprite->tile_number & 0xFE : cur_sprite->tile_number;
 
 			// check if the pixel will be on screen
 			if (cur_sprite->x_pos - j - 1 < 0 || cur_sprite->x_pos - j - 1 > 159)
@@ -214,11 +217,11 @@ void draw_obj(u8* scanline)
 			}
 
 			u8 sprite_x_offset = cur_sprite->x_flip ? 7 - j : j;
-			u8 sprite_y_offset = 16 - (cur_sprite->y_pos - gb.ly);
+			u8 sprite_y_offset = 16 - (cur_sprite->y_pos - ppu.ly);
 
 			if (cur_sprite->y_flip)
 			{
-				if (gb.lcdc.obj_size)
+				if (ppu.lcdc.obj_size)
 					sprite_y_offset = (15 - sprite_y_offset);
 				else
 					sprite_y_offset = (7 - sprite_y_offset);
@@ -226,17 +229,17 @@ void draw_obj(u8* scanline)
 
 			u16 sprite_tile_address = (sprite_tile_number * 16);
 
-			u8 sprite_data1 = gb.vram[sprite_tile_address + (sprite_y_offset * 2)];
-			u8 sprite_data2 = gb.vram[sprite_tile_address + (sprite_y_offset * 2) + 1];
+			u8 sprite_data1 = ppu.vram[sprite_tile_address + (sprite_y_offset * 2)];
+			u8 sprite_data2 = ppu.vram[sprite_tile_address + (sprite_y_offset * 2) + 1];
 
 			u8 sprite_color_data = ((sprite_data1 >> (sprite_x_offset)) & 1) | (((sprite_data2 >> (sprite_x_offset)) & 1) << 1);
 
 			u8 sprite_palette;
 			
 			if (cur_sprite->palette == 1)
-				sprite_palette = gb.obp1;
+				sprite_palette = ppu.obp1;
 			else
-				sprite_palette = gb.obp0;
+				sprite_palette = ppu.obp0;
 
 			u8 sprite_color = 0;
 
@@ -291,16 +294,16 @@ void fill_buffer(u8* scanline)
 				break;
 		}
 
-		gb.screen_buffer[143 - gb.ly][i][0] = r;
-		gb.screen_buffer[143 - gb.ly][i][1] = g;
-		gb.screen_buffer[143 - gb.ly][i][2] = b;
+		gb.screen_buffer[ppu.ly][i][0] = r;
+		gb.screen_buffer[ppu.ly][i][1] = g;
+		gb.screen_buffer[ppu.ly][i][2] = b;
 	}
 }
 
 void increment_ly()
 {
-	gb.ly++;
-	gb.stat.lyc_ly_flag = gb.ly == gb.lyc;
-	if (gb.stat.lyc_ly_int_enable && gb.stat.lyc_ly_flag)
-		gb.interrupt_flag.stat = 1;
+	ppu.ly++;
+	ppu.stat.lyc_ly_flag = ppu.ly == ppu.lyc;
+	if (ppu.stat.lyc_ly_int_enable && ppu.stat.lyc_ly_flag)
+		cpu.interrupt_flag.stat = 1;
 }

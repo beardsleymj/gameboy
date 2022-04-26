@@ -1,5 +1,9 @@
 #pragma once
-#include "../gb.h"
+#include "../gb_system.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define ROM_BANK_SIZE 0x4000 // 16 KB
 #define RAM_BANK_SIZE 0x2000 // 8 KB
@@ -37,3 +41,7 @@ extern cartridge_t cart;
 void cart_load(char* rom);
 u8 cart_read_byte(u16 address);
 void write_cart_byte(u16 address, u8 value);
+
+#ifdef __cplusplus
+}
+#endif

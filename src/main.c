@@ -1,5 +1,5 @@
 #include <SDL.h>
-#include "gb.h"
+#include "gb_system.h"
 #include "bus.h"
 #include "cpu.h"
 #include "timers.h"
@@ -8,6 +8,7 @@
 #include "event.h"
 #include "apu.h"
 #include "mbc/cart.h"
+#include "cpu.h"
 
 gameboy_t gb;
 
@@ -47,7 +48,6 @@ int main(int argc, char** argv)
 		log_file = fopen("output.log", "w");
 	}
 	bool quit = false;
-	SDL_Event event;
 	while (quit == false)
 	{
 		if (debug)
@@ -58,9 +58,9 @@ int main(int argc, char** argv)
 		cpu_run();
 		ppu_run();
 		sync_timing();
-		if (gb.draw_frame)
+		if (ppu.draw_frame)
 		{
-			quit = handle_event(&event);
+			quit = handle_events();
 			render();
 		}
 
@@ -77,6 +77,6 @@ int main(int argc, char** argv)
 
 print_status(FILE* f)
 {
-	fprintf(f, "A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", gb.r.A, gb.r.F, gb.r.B, gb.r.C, gb.r.D, gb.r.E, gb.r.H, gb.r.L, gb.SP, gb.PC, read_byte(gb.PC), read_byte(gb.PC + 1), read_byte(gb.PC + 2), read_byte(gb.PC + 3)); gb.cycles -= 16;
-	//printf("A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", gb.r.A, gb.r.F, gb.r.B, gb.r.C, gb.r.D, gb.r.E, gb.r.H, gb.r.L, gb.SP, gb.PC, read_byte(gb.PC), read_byte(gb.PC + 1), read_byte(gb.PC + 2), read_byte(gb.PC + 3)); gb.cycles -= 16;
+	fprintf(f, "A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", cpu.r.A, cpu.r.F, cpu.r.B, cpu.r.C, cpu.r.D, cpu.r.E, cpu.r.H, cpu.r.L, cpu.SP, cpu.PC, read_byte(cpu.PC), read_byte(cpu.PC + 1), read_byte(cpu.PC + 2), read_byte(cpu.PC + 3)); gb.cycles -= 16;
+	//printf("A: %.2X F: %.2X B: %.2X C: %.2X D: %.2X E: %.2X H: %.2X L: %.2X SP: %.4X PC: 00:%.4X (%.2X %.2X %.2X %.2X)\n", cpu.r.A, cpu.r.F, cpu.r.B, cpu.r.C, cpu.r.D, cpu.r.E, cpu.r.H, cpu.r.L, cpu.SP, cpu.PC, read_byte(cpu.PC), read_byte(cpu.PC + 1), read_byte(cpu.PC + 2), read_byte(cpu.PC + 3)); gb.cycles -= 16;
 }

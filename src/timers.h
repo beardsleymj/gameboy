@@ -1,5 +1,5 @@
 #pragma once
-#include "gb.h"
+#include "gb_system.h"
 
 void sync_timing();
 void write_div();

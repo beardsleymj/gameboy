@@ -19,11 +19,18 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dep\imgui\src\imgui.cpp" />
+    <ClCompile Include="dep\imgui\src\imgui_draw.cpp" />
+    <ClCompile Include="dep\imgui\src\imgui_impl_sdl.cpp" />
+    <ClCompile Include="dep\imgui\src\imgui_impl_sdlrenderer.cpp" />
+    <ClCompile Include="dep\imgui\src\imgui_tables.cpp" />
+    <ClCompile Include="dep\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="src\apu.c" />
+    <ClCompile Include="src\imgui_renderer.cpp" />
     <ClCompile Include="src\mbc\cart.c" />
     <ClCompile Include="src\cpu.c" />
     <ClCompile Include="src\event.c" />
-    <ClCompile Include="src\gb.c" />
+    <ClCompile Include="src\gb_system.c" />
     <ClCompile Include="src\cpu_instr.c" />
     <ClCompile Include="src\main.c" />
     <ClCompile Include="src\mbc\mbc1.c" />
@@ -35,11 +42,13 @@
     <ClCompile Include="src\timers.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dep\imgui\src\imgui_impl_opengl3_loader.h" />
     <ClInclude Include="src\apu.h" />
+    <ClInclude Include="src\imgui_renderer.h" />
     <ClInclude Include="src\mbc\cart.h" />
     <ClInclude Include="src\cpu.h" />
     <ClInclude Include="src\event.h" />
-    <ClInclude Include="src\gb.h" />
+    <ClInclude Include="src\gb_system.h" />
     <ClInclude Include="src\cpu_instr.h" />
     <ClInclude Include="src\mbc\mbc.h" />
     <ClInclude Include="src\bus.h" />
@@ -145,8 +154,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)dep\SDL2-2.0.22\include;$(SolutionDir)dep\imgui\include;$(SolutionDir)dep\glad\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -156,6 +164,7 @@
       </IgnoreAllDefaultLibraries>
       <EntryPointSymbol>
       </EntryPointSymbol>
+      <AdditionalLibraryDirectories>$(SolutionDir)dep\SDL2-2.0.22\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -189,17 +198,17 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Matt\development\SDL2\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\dep\SDL2-2.0.22\include;$(SolutionDir)\dep\glew-2.2.0\include;$(SolutionDir)\dep\imgui\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>sdl2.lib;sdl2main.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sdl2.lib;sdl2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
-      <AdditionalLibraryDirectories>C:\Users\Matt\development\SDL2\lib\x64</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)dep\SDL2-2.0.22\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

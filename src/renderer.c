@@ -1,12 +1,19 @@
 #include "renderer.h"
+#include "imgui_renderer.h"
+#include "SDL_opengl.h"
+#include "ppu.h"
 
 // 16.7427 ms / frame
 
+static SDL_Window* debug_window;
 static SDL_Window* window;
+static SDL_Renderer* debug_renderer;
 static SDL_Renderer* renderer;
 static SDL_Event event;
 static u8 scale;
 static SDL_Texture* texture;
+static SDL_Texture* texture2;
+
 
 static u32 elapsed = 0; // ms
 static u64 next_frame = 0; // ns
@@ -18,20 +25,23 @@ void renderer_init()
     scale = 4;
 
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);;
-    window = SDL_CreateWindow("BeardsBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160 * scale, 144 * scale, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
-    renderer = SDL_CreateRenderer(window, -1, 0);
-    SDL_RenderSetLogicalSize(renderer, 160, 144);
+
+    window = SDL_CreateWindow("BeardsBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+
+    debug_window = SDL_CreateWindow("SDL2 ImGui Renderer", 0, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_RESIZABLE);
+    debug_renderer = SDL_CreateRenderer(debug_window, -1, SDL_RENDERER_ACCELERATED);
+
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 160, 144);
+    texture2 = SDL_CreateTexture(debug_renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 160, 144);
+
+
+    init_imgui(debug_window, debug_renderer, texture2);
 }
 
 void render()
 {
-    gb.draw_frame = false;
+    ppu.draw_frame = false;
 
     if (cap_framerate)
     {
@@ -49,9 +59,14 @@ void render()
     }
 
     SDL_UpdateTexture(texture, NULL, gb.screen_buffer, 160 * 3);
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-    SDL_RenderCopyEx(renderer, texture, NULL, NULL, 0, NULL, SDL_FLIP_VERTICAL);
+    SDL_UpdateTexture(texture2, NULL, gb.screen_buffer, 160 * 3);
+
+   
+    render_imgui(debug_renderer);
+    SDL_GL_SwapWindow(window);
+    SDL_RenderPresent(debug_renderer);
+
+    //SDL_RenderCopy(renderer, texture, NULL, NULL);
+    SDL_RenderCopyEx(renderer, texture, NULL, NULL, 0, NULL, 0);
     SDL_RenderPresent(renderer);
-
-
 }

@@ -1,6 +1,8 @@
 #include "bus.h"
 #include "timers.h"
 #include "mbc/cart.h"
+#include "ppu.h"
+#include "cpu.h"
 
 u8 read_byte(u16 address) 
 {
@@ -8,7 +10,7 @@ u8 read_byte(u16 address)
 
 	if (gb.bootrom_disabled == 0 && address < 0x100)	return gb.bootrom[address];
 	else if (address <= 0x7FFF)							return cart_read_byte(address);
-	else if (address >= 0x8000 && address <= 0x9FFF)	return gb.vram[address & 0x1FFF];
+	else if (address >= 0x8000 && address <= 0x9FFF)	return ppu.vram[address & 0x1FFF];
 	else if (address >= 0xA000 && address <= 0xBFFF)	return cart_read_byte(address);
 	else if (address >= 0xC000 && address <= 0xCFFF)	return gb.wram[address & 0x1FFF];
 	else if (address >= 0xD000 && address <= 0xDFFF)	return gb.wram[address & 0x1FFF];
@@ -16,7 +18,7 @@ u8 read_byte(u16 address)
 	else if (address >= 0xFE00 && address <= 0xFE9F)	return gb.oam[address & 0xFF];
 	else if (address >= 0xFF00 && address <= 0xFF7F)	return read_io(address);
 	else if (address >= 0xFF80 && address <= 0xFFFE)	return gb.hram[address & 0x7F];
-	else if (address == INTERRUPT_ENABLE)				return gb.interrupt_enable.raw;
+	else if (address == INTERRUPT_ENABLE)				return cpu.interrupt_enable.raw;
 	else if (address == 0xFF7F)							return 0xFF; // UNUSED Memory Mapped IO returns OxFF, add more
 	else
 	{
@@ -58,55 +60,55 @@ u8 read_io(u16 address)
 			break;
 
 		case INTERRUPT_FLAG:
-			return gb.interrupt_flag.raw | 0b11100000;
+			return cpu.interrupt_flag.raw | 0b11100000;
 			break;
 
 		case LCDC:
-			return gb.lcdc.raw;
+			return ppu.lcdc.raw;
 			break;
 
 		case STAT:
-			return gb.stat.raw | 0b10000000;
+			return ppu.stat.raw | 0b10000000;
 			break;
 
 		case SCY:
-			return gb.scy;
+			return ppu.scy;
 			break;
 
 		case SCX:
-			return gb.scx;
+			return ppu.scx;
 			break;
 
 		case LYC:
-			return gb.lyc;
+			return ppu.lyc;
 			break;
 
 		case DMA:
-			return gb.dma;
+			return ppu.dma;
 			break;
 
 		case BGP:
-			return gb.bgp;
+			return ppu.bgp;
 			break;
 
 		case OBP0:
-			return gb.obp0;
+			return ppu.obp0;
 			break;
 
 		case OBP1:
-			return gb.obp1;
+			return ppu.obp1;
 			break;
 
 		case WY:
-			return gb.wy;
+			return ppu.wy;
 			break;
 
 		case WX:
-			return gb.wx;
+			return ppu.wx;
 			break;
 
 		case LY:
-			return gb.ly;
+			return ppu.ly;
 			break;
 
 		case 0xFF4D:
@@ -129,7 +131,7 @@ void write_byte(u16 address, u8 value)
 	gb.cycles += 4;
 
 	if (address <= 0x7FFF)								write_cart_byte(address, value);
-	else if (address >= 0x8000 && address <= 0x9FFF)	gb.vram[address - 0x8000] = value;
+	else if (address >= 0x8000 && address <= 0x9FFF)	ppu.vram[address - 0x8000] = value;
 	else if (address >= 0xA000 && address <= 0xBFFF)	write_cart_byte(address, value);
 	else if (address >= 0xC000 & address <= 0xCFFF)		gb.wram[address - 0xC000] = value;
 	else if (address >= 0xD000 & address <= 0xDFFF)		gb.wram[address - 0xC000] = value;
@@ -138,7 +140,7 @@ void write_byte(u16 address, u8 value)
 	else if (address >= 0xFEA0 && address <= 0xFEFF)	printf("write: illegal write to prohibited area: %x\n", address);
 	else if (address >= 0xFF00 && address <= 0xFF7F)	write_io(address, value);
 	else if (address >= 0xFF80 && address <= 0xFFFE)	gb.hram[address - 0xFF80] = value;
-	else if (address == INTERRUPT_ENABLE)				gb.interrupt_enable.raw = value;
+	else if (address == INTERRUPT_ENABLE)				cpu.interrupt_enable.raw = value;
 	else if (address >= 0xE000 && address <= 0xFDFF)	printf("Illegal write to echo ram: %x\n", address);
 	else
 		printf("Unimplemented Write Address: %X\n", address);
@@ -178,44 +180,44 @@ void write_io(u16 address, u8 value)
 			break;
 
 		case INTERRUPT_FLAG:
-			gb.interrupt_flag.raw = value;
+			cpu.interrupt_flag.raw = value;
 			break;
 
 		case LCDC:
-			gb.lcdc.raw = value;
+			ppu.lcdc.raw = value;
 			break;
 
 		case STAT:
-			gb.stat.raw = (value & 0b11111000) | (gb.stat.raw & 0b00000111);
+			ppu.stat.raw = (value & 0b11111000) | (ppu.stat.raw & 0b00000111);
 			break;
 
 		case SCY:
-			gb.scy = value;
+			ppu.scy = value;
 			break;
 
 		case SCX:
-			gb.scx = value;
+			ppu.scx = value;
 			break;
 
 		case LYC:
-			gb.lyc = value;
+			ppu.lyc = value;
 			break;
 
 		case DMA:
-			gb.dma = value;
+			ppu.dma = value;
 			dma_transfer();
 			break;
 
 		case BGP:
-			gb.bgp = value;
+			ppu.bgp = value;
 			break;
 
 		case OBP0:
-			gb.obp0 = value;
+			ppu.obp0 = value;
 			break;
 
 		case OBP1:
-			gb.obp1 = value;
+			ppu.obp1 = value;
 			break;
 
 		case 0xFF50:
@@ -223,11 +225,11 @@ void write_io(u16 address, u8 value)
 			break;
 
 		case WY:
-			gb.wy = value;
+			ppu.wy = value;
 			break;
 
 		case WX:
-			gb.wx = value;
+			ppu.wx = value;
 			break;
 
 		case LY: // read only
@@ -255,7 +257,7 @@ u16 read_word(u16 address)
 
 void dma_transfer()
 {
-	u16 address = gb.dma * 0x100;
+	u16 address = ppu.dma * 0x100;
 	if (address >= 0xE000)
 		address -= 0x2000;
 	for (u8 i = 0; i < 0xA0; i++)

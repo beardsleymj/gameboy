@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Bootrom
 dmg01.gb
+
+#dependencies
+dep/

@@ -1,5 +1,7 @@
-#include "gb.h"
+#include "gb_system.h"
 #include "mbc/cart.h"
+#include "cpu.h"
+#include "ppu.h"
 
 void gb_init(char* rom_path, bool bootrom)
 {
@@ -17,22 +19,22 @@ void gb_init(char* rom_path, bool bootrom)
 	if (bootrom && !load_bootrom())
 	{
 		gb.bootrom_disabled = 0;
-		gb.PC = 0;
-		gb.SP = 0;
-		gb.r.AF = 0;
-		gb.r.BC = 0;
-		gb.r.DE = 0;
-		gb.r.HL = 0;
+		cpu.PC = 0;
+		cpu.SP = 0;
+		cpu.r.AF = 0;
+		cpu.r.BC = 0;
+		cpu.r.DE = 0;
+		cpu.r.HL = 0;
 	}
 	else // initialize registers
 	{
 		gb.bootrom_disabled = 1;
-		gb.PC = 0x100;
-		gb.SP = 0xFFFE;
-		gb.r.AF = 0x01B0;
-		gb.r.BC = 0x0013;
-		gb.r.DE = 0x00D8;
-		gb.r.HL = 0x014D;
+		cpu.PC = 0x100;
+		cpu.SP = 0xFFFE;
+		cpu.r.AF = 0x01B0;
+		cpu.r.BC = 0x0013;
+		cpu.r.DE = 0x00D8;
+		cpu.r.HL = 0x014D;
 		gb.audio[0xFF10 - 0xFF10] = 0x80; // NR10
 		gb.audio[0xFF11 - 0xFF10] = 0xBF; // NR11
 		gb.audio[0xFF12 - 0xFF10] = 0xF3; // NR12
@@ -51,18 +53,18 @@ void gb_init(char* rom_path, bool bootrom)
 		gb.audio[0xFF24 - 0xFF10] = 0x77; // NR50
 		gb.audio[0xFF25 - 0xFF10] = 0xF3; // NR51
 		gb.audio[0xFF26 - 0xFF10] = 0xF1; // NR52
-		gb.lcdc.raw = 0x91;
-		gb.scy = 0x00;
-		gb.scx = 0x00;
-		gb.ly = 0x91;
-		gb.lyc = 0x00;
-		gb.dma = 0xFF;
-		gb.bgp = 0xFC;
-		gb.obp0 = 0xFF;
-		gb.obp1 = 0xFF;
-		gb.wx = 0x00;
-		gb.wy = 0x00;
-		gb.interrupt_enable.raw = 0x00;
+		ppu.lcdc.raw = 0x91;
+		ppu.scy = 0x00;
+		ppu.scx = 0x00;
+		ppu.ly = 0x91;
+		ppu.lyc = 0x00;
+		ppu.dma = 0xFF;
+		ppu.bgp = 0xFC;
+		ppu.obp0 = 0xFF;
+		ppu.obp1 = 0xFF;
+		ppu.wx = 0x00;
+		ppu.wy = 0x00;
+		cpu.interrupt_enable.raw = 0x00;
 	}
 
 	gb.cycles = 0;
@@ -71,11 +73,11 @@ void gb_init(char* rom_path, bool bootrom)
 	gb.ppu_line_cycles = 0;
 
 	// ppu
-	gb.oam_buffer_size = 0;
-	gb.window_internal_line_counter = 0;
-	gb.window_draw_flag = 0;
-	gb.vblanks = 0;
-	gb.draw_frame = 0;
+	ppu.oam_buffer_size = 0;
+	ppu.window_internal_line_counter = 0;
+	ppu.window_draw_flag = 0;
+	ppu.vblanks = 0;
+	ppu.draw_frame = 0;
 
 	// joypad
 	gb.joyp.raw = 0XFF;

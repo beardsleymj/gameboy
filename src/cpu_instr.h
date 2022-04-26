@@ -1,5 +1,5 @@
 #pragma once
-#include "gb.h"
+#include "gb_system.h"
 
 void ld_hl_sp_i8();
 void push(u8);

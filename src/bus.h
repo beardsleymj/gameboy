@@ -1,5 +1,5 @@
 #pragma once
-#include "gb.h"
+#include "gb_system.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
