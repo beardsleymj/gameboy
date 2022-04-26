@@ -14,7 +14,6 @@ static u8 scale;
 static SDL_Texture* texture;
 static SDL_Texture* texture2;
 
-
 static u32 elapsed = 0; // ms
 static u64 next_frame = 0; // ns
 
@@ -34,7 +33,6 @@ void renderer_init()
 
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 160, 144);
     texture2 = SDL_CreateTexture(debug_renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 160, 144);
-
 
     init_imgui(debug_window, debug_renderer, texture2);
 }

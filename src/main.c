@@ -63,10 +63,10 @@ int main(int argc, char** argv)
 			quit = handle_events();
 			render();
 		}
-
-
-
 	}
+
+	write_save();
+
 
 	if (debug)
 	{

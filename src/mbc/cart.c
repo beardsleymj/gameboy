@@ -78,22 +78,27 @@ void cart_load(char* rom_path)
 	}
 	cart.ram_banks = banks;
 
-	//if (cart.ram_banks != 0)
-	//{
-	//	char savepath[256];
-	//	strcpy(&savepath, rom_path);
-	//	char* x;
-	//	x = strchr(savepath, '.');
-	//	strcpy(x, ".sav");
-	//	cart.savefile = fopen(&savepath, "rb+");
-	//	if (cart.savefile == 0)
-	//	{
-	//		cart.savefile = fopen(&savepath, "wb+");
-
-	//	}
-	//}
-	
 	cart.sram = calloc(1, (size_t)banks * RAM_BANK_SIZE);
+
+	if (cart.ram_banks != 0)
+	{
+		char savepath[256];
+		strcpy(&savepath, rom_path);
+		char* x;
+		x = strchr(savepath, '.');
+		strcpy(x, ".sav");
+		cart.savefile = fopen(savepath, "rb+");
+		if (cart.savefile == 0)
+		{
+			cart.savefile = fopen(savepath, "wb+");
+		}
+		else
+		{
+			fread(cart.sram, (size_t)banks * RAM_BANK_SIZE, 1, cart.savefile);
+		}
+	}
+
+
 
 	memcpy(&cart.title, &cart.rom[0x0134], 16);
 	cart.cgb_flag = cart.rom[0x143];
@@ -161,7 +166,13 @@ void write_cart_byte(u16 address, u8 value)
 	}
 }
 
+// can either dump sram on closing the emulator or every time sram writes
+// dumping the whole thing is easier for now
 void write_save()
 {
-
+	if (cart.savefile == NULL)
+		return;
+	fseek(cart.savefile, 0, SEEK_SET);
+	fwrite(cart.sram, cart.ram_banks * 0x2000, 1, cart.savefile);
+	fclose(cart.savefile);
 }

@@ -13,13 +13,20 @@ u8 mbc3_read(u16 address)
 	}
 	else if (address >= 0xA000 && address <= 0xBFFF)
 	{
-		if (cart.ram_bank_enable == false)
+		if (cart.ram_bank_enable == true)
 		{
-			return 0xFF;
+			if (cart.banking_mode == simple || cart.ram_banks == 1)
+				return cart.sram[address & 0x1FFF];
+			else if (cart.banking_mode == advanced)
+			{
+				if (cart.bank2_reg < cart.ram_banks)
+					return cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)];
+				else
+					return 0;
+			}
 		}
-
-		if (cart.banking_mode == simple)
-			return cart.sram[((cart.bank2_reg * 0x2000) + address & 0x1FFF)];
+		else // ram banking disabled
+			return 0xFF;
 	}
 }
 
