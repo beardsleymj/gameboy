@@ -1,5 +1,6 @@
 #pragma once
-#include "gb_system.h"
+
+#include "types.h"
 
 void ld_hl_sp_i8();
 void push(u8);

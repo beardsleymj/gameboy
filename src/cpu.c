@@ -1,7 +1,8 @@
-#include "gb_system.h"
 #include "cpu.h"
 #include "cpu_instr.h"
+#include "gb_system.h"
 #include "bus.h"
+
 #include <string.h>
 
 cpu_t cpu;

@@ -2,7 +2,9 @@
 #include "SDL.h"
 #include "SDL_audio.h"
 #include "types.h"
-#include <stdio.h>
+#include <string.h>
+
+apu_t apu;
 
 void test_audio()
 {
@@ -21,9 +23,19 @@ void test_audio()
     SDL_PauseAudio(0);
     //SDL_Delay(5000);
     SDL_CloseAudio();
+    //SDL_QueueAudio(1, data, len);
 }
 
-void SDLAudioCallback(void* userdata, u8* stream, s64 len)
-{   // clear buffer to silence
-    memset(stream, 0, len);
+static Uint8* audio_chunk;
+static Uint32 audio_len;
+static Uint8* audio_pos;
+
+void SDLAudioCallback(void* userdata, u8* stream, int len)
+{
+    if (len == 0)
+        return;
+
+    for (int i = 0; i < len; i++)
+        stream[i] = i;
+
 }

@@ -1,9 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -12,32 +8,6 @@ extern "C" {
 
 #define DMG_CLOCK_FREQ 0x400000
 #define DIV_FREQ 0x4000
-
-#define LCDC 0xFF40
-#define STAT 0xFF41
-#define SCY 0xFF42
-#define SCX 0xFF43
-#define LY 0xFF44
-#define LYC 0xFF45
-#define WY 0xFF4A
-#define WX 0xFF4B
-#define BGP 0xFF47
-#define OBP0 0xFF48
-#define OBP1 0xFF49
-
-#define INTERRUPT_ENABLE 0xFFFF
-#define INTERRUPT_FLAG 0xFF0F
-
-#define SB 0xFF01
-#define SC 0xFF02
-#define DIV 0xFF04
-#define TIMA 0xFF05
-#define TMA 0xFF06
-#define TAC 0xFF07
-#define JOYP 0xFF00
-#define DMA 0xFF46
-#define OAM_START 0xFE00
-#define OAM_END 0xFE9F
 
 typedef union joypad
 {
@@ -52,7 +22,7 @@ typedef union joypad
 			direction	: 1,
 			action		: 1;
 	};
-}joypad;
+}joypad_t;
 
 typedef union tac
 {
@@ -63,7 +33,7 @@ typedef union tac
 			input_clock_select	: 2,
 			timer_enable		: 1;
 	};
-} tac;
+} tac_t;
 
 typedef struct gameboy 
 {
@@ -79,22 +49,18 @@ typedef struct gameboy
 	u8 hram[0x7F];
 
 	// I/O RANGES
-	joypad joyp;
+	joypad_t joyp;
 	u8 sb; // Serial transfer data (R/W)
 	u8 sc; // Serial transfer control (R/W)
 	u8 div;
 	u8 tima;
 	u8 tma;
-	tac tac;
-
-	u8 nr10;
-	u8 audio[0x30]; // probably expand later
+	tac_t tac;
 
 	// timing
 	uint64_t cycles;
 	uint64_t ppu_cycles;
 	uint64_t ppu_next_mode;
-	uint64_t ppu_line_cycles;
 	uint64_t last_sync_cycle;
 	uint64_t last_div_cycle;
 	uint64_t last_tima_cycle;

@@ -4,6 +4,8 @@
 extern "C" {
 #endif
 
+#include "types.h"
+
 typedef union registers
 {
 	u16 registers[4];

@@ -1,4 +1,5 @@
 #include "mbc.h"
+#include "cart.h"
 
 u8 mbc2_read(u16 address)
 {

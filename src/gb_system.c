@@ -2,6 +2,7 @@
 #include "mbc/cart.h"
 #include "cpu.h"
 #include "ppu.h"
+#include "apu.h"
 
 void gb_init(char* rom_path, bool bootrom)
 {
@@ -35,24 +36,27 @@ void gb_init(char* rom_path, bool bootrom)
 		cpu.r.BC = 0x0013;
 		cpu.r.DE = 0x00D8;
 		cpu.r.HL = 0x014D;
-		gb.audio[0xFF10 - 0xFF10] = 0x80; // NR10
-		gb.audio[0xFF11 - 0xFF10] = 0xBF; // NR11
-		gb.audio[0xFF12 - 0xFF10] = 0xF3; // NR12
-		gb.audio[0xFF14 - 0xFF10] = 0xBF; // NR14
-		gb.audio[0xFF16 - 0xFF10] = 0x3F; // NR21
-		gb.audio[0xFF17 - 0xFF10] = 0x00; // NR22
-		gb.audio[0xFF19 - 0xFF10] = 0xBF; // NR24
-		gb.audio[0xFF1A - 0xFF10] = 0x7F; // NR30
-		gb.audio[0xFF1B - 0xFF10] = 0xFF; // NR31
-		gb.audio[0xFF1C - 0xFF10] = 0x9F; // NR32
-		gb.audio[0xFF1E - 0xFF10] = 0xBF; // NR34
-		gb.audio[0xFF20 - 0xFF10] = 0xFF; // NR41
-		gb.audio[0xFF21 - 0xFF10] = 0x00; // NR42
-		gb.audio[0xFF22 - 0xFF10] = 0x00; // NR43
-		gb.audio[0xFF23 - 0xFF10] = 0xBF; // NR44
-		gb.audio[0xFF24 - 0xFF10] = 0x77; // NR50
-		gb.audio[0xFF25 - 0xFF10] = 0xF3; // NR51
-		gb.audio[0xFF26 - 0xFF10] = 0xF1; // NR52
+		apu.nr10.raw = 0x80;
+		apu.nr11.raw = 0xBF;
+		apu.nr12.raw = 0xF3;
+		apu.nr1314.lo = 0xFF;
+		apu.nr1314.hi = 0xBF;
+		apu.nr21.raw = 0x3F;
+		apu.nr22.raw = 0xFF;
+		apu.nr2324.lo = 0xFF;
+		apu.nr2324.hi = 0xBF;
+		apu.nr30.raw = 0x7F;
+		apu.nr31 = 0xFF;
+		apu.nr32.raw = 0x9F;
+		apu.nr3334.lo = 0xFF;
+		apu.nr3334.hi = 0xBF;
+		apu.nr41.raw = 0xFF;
+		apu.nr42.raw = 0x00;
+		apu.nr43.raw = 0x00;
+		apu.nr44.raw = 0xBF;
+		apu.nr50.raw = 0xFF;
+		apu.nr51.raw = 0xF3;
+		apu.nr52.raw = 0xF1;
 		ppu.lcdc.raw = 0x91;
 		ppu.scy = 0x00;
 		ppu.scx = 0x00;
@@ -70,7 +74,6 @@ void gb_init(char* rom_path, bool bootrom)
 	gb.cycles = 0;
 	gb.ppu_cycles = 0;
 	gb.ppu_next_mode = 2;
-	gb.ppu_line_cycles = 0;
 
 	// ppu
 	ppu.oam_buffer_size = 0;

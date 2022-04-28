@@ -1,5 +1,6 @@
 #include "cpu_instr.h"
 #include "cpu.h"
+#include "gb_system.h"
 
 void ld_hl_sp_i8() 
 {

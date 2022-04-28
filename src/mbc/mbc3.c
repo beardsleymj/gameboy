@@ -1,4 +1,5 @@
 #include "mbc.h"
+#include "cart.h"
 
 u8 mbc3_read(u16 address)
 {
@@ -21,18 +22,15 @@ u8 mbc3_read(u16 address)
 			{
 				if (cart.bank2_reg < cart.ram_banks)
 					return cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)];
-				else
-					return 0;
 			}
 		}
-		else // ram banking disabled
-			return 0xFF;
 	}
+	
+	return 0xFF;
 }
 
 void mbc3_write(u16 address, u8 value)
 {
-	//printf("MBC3 Write: Address %X Value %X\n", address, value);
 	if (address >= 0x0000 && address <= 0x1FFF)
 	{
 		cart.ram_bank_enable = (value & 0x0A) == 0x0A;
@@ -47,7 +45,7 @@ void mbc3_write(u16 address, u8 value)
 	}
 	else if (address >= 0x6000 && address <= 0x7FFF)
 	{	
-		cart.banking_mode = value & 1;
+		cart.banking_mode = (value & 1);
 	}
 	else if (address >= 0xA000 && address <= 0xBFFF && cart.ram_bank_enable != 0)
 	{	

@@ -74,6 +74,9 @@
     <ClCompile Include="dep\imgui\src\imgui_impl_sdlrenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\mbc\mbc5.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\timers.h">

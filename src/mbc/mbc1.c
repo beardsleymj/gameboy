@@ -1,6 +1,5 @@
 #include "mbc.h"
-
-// should be working(?)
+#include "cart.h"
 
 u8 mbc1_read(u16 address)
 {
@@ -23,13 +22,11 @@ u8 mbc1_read(u16 address)
 			{
 				if (cart.bank2_reg < cart.ram_banks)
 					return cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)];
-				else
-					return 0;
 			}
 		}
-		else // ram banking disabled
-			return 0xFF;
 	}
+
+	return 0xFF;
 }
 
 void mbc1_write(u16 address, u8 value)

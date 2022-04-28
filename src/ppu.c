@@ -78,7 +78,7 @@ void oam_search()
 	ppu.oam_buffer_size = 0;
 	for (u16 loc = 0; loc < 0xA0; loc += 4)	
 	{
-		sprite* current_sprite = &gb.oam[loc];
+		sprite* current_sprite = (sprite*)&gb.oam[loc];
 		u8 sprite_height = 8 + (ppu.lcdc.obj_size * 8); // lcdc bit 2 for sprite height 0 = 8px, 1 = 16px
 		if ((ppu.ly + 16 >= current_sprite->y_pos) && (ppu.ly + 16 < current_sprite->y_pos + sprite_height)) 
 		{
@@ -104,13 +104,13 @@ void oam_search()
 	 if (ppu.lcdc.lcd_enable)
 	 {
 		 if (ppu.lcdc.bg_win_enable)
-			 draw_bg(&scanline);
+			 draw_bg(scanline);
 
 		 if (ppu.lcdc.obj_enable)
-			 draw_obj(&scanline);
+			 draw_obj(scanline);
 	 }
 
-	 fill_buffer(&scanline);
+	 fill_buffer(scanline);
 }
 
 void draw_bg(u8 *scanline)

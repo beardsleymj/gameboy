@@ -25,10 +25,11 @@ void renderer_init()
 
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
-    window = SDL_CreateWindow("BeardsBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 720, 720, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("BeardsBoy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160 * scale, 144 * scale, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_RenderSetLogicalSize(renderer, 160, 144);
 
-    debug_window = SDL_CreateWindow("SDL2 ImGui Renderer", 0, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_RESIZABLE);
+    debug_window = SDL_CreateWindow("Debug", 0, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_RESIZABLE);
     debug_renderer = SDL_CreateRenderer(debug_window, -1, SDL_RENDERER_ACCELERATED);
 
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 160, 144);
@@ -43,7 +44,7 @@ void render()
 
     if (cap_framerate)
     {
-        u32 next_frame_ms = next_frame / 1000;
+        u64 next_frame_ms = next_frame / 1000;
         elapsed = SDL_GetTicks();
         if (next_frame_ms >= elapsed)
         {
@@ -58,13 +59,9 @@ void render()
 
     SDL_UpdateTexture(texture, NULL, gb.screen_buffer, 160 * 3);
     SDL_UpdateTexture(texture2, NULL, gb.screen_buffer, 160 * 3);
-
    
     render_imgui(debug_renderer);
-    SDL_GL_SwapWindow(window);
-    SDL_RenderPresent(debug_renderer);
 
-    //SDL_RenderCopy(renderer, texture, NULL, NULL);
-    SDL_RenderCopyEx(renderer, texture, NULL, NULL, 0, NULL, 0);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 }

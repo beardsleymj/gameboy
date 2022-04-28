@@ -1,8 +1,10 @@
 #include "bus.h"
-#include "timers.h"
 #include "mbc/cart.h"
 #include "ppu.h"
+#include "apu.h"
 #include "cpu.h"
+#include "timers.h"
+#include "event.h"
 
 u8 read_byte(u16 address) 
 {
@@ -27,10 +29,101 @@ u8 read_byte(u16 address)
 	}
 }
 
+// unmapped io bits / regs will return 1 for now
 u8 read_io(u16 address)
 {
 	switch (address)
 	{
+		case NR10:
+			return apu.nr10.raw | 0b10000000;
+			break;
+
+		case NR11:
+			return apu.nr11.raw | 0b00111111;
+			break;
+
+		case NR12:
+			return apu.nr12.raw;
+			break;
+
+		case NR13:
+			return 0xFF;
+			break;
+
+		case NR14:
+			return apu.nr1314.hi | 0b10000111;
+			break;
+
+		case NR21:
+			return apu.nr21.raw | 0b00111111;
+			break;
+
+		case NR22:
+			return apu.nr22.raw;
+			break;
+
+		case NR23:
+			return 0xFF;
+			break;
+
+		case NR24:
+			return apu.nr2324.raw | 0b10111000;
+			break;
+
+		case NR30:
+			return apu.nr30.raw | 0b01111111;
+			break;
+
+		case NR31:
+			return 0xFF;
+			break;
+
+		case NR32:
+			return apu.nr32.raw | 0b10011111;
+			break;
+
+		case NR33:
+			return 0xFF;
+			break;
+
+		case NR34:
+			return apu.nr3334.hi | 0b10111000;
+			break;
+
+		case 0xFF30: case 0xFF31: case 0xFF32: case 0xFF33:
+		case 0xFF34: case 0xFF35: case 0xFF36: case 0xFF37:
+		case 0xFF38: case 0xFF39: case 0xFF3A: case 0xFF3B:
+		case 0xFF3C: case 0xFF3D: case 0xFF3E: case 0xFF3F:
+			return apu.wave_pattern_ram[address & 0xF];
+
+		case NR41:
+			return 0xFF;
+			break;
+
+		case NR42:
+			return apu.nr42.raw;
+			break;
+
+		case NR43:
+			return apu.nr43.raw;
+			break;
+
+		case NR44:
+			return apu.nr44.raw | 0b10111111;
+			break;
+
+		case NR50:
+			return apu.nr50.raw;
+			break;
+
+		case NR51:
+			return apu.nr51.raw;
+			break;
+
+		case NR52:
+			return apu.nr52.raw | 0b10001111;
+			break;
+
 		case JOYP:
 			return read_joyp();
 			break;
@@ -118,23 +211,19 @@ u8 read_io(u16 address)
 		default:
 			if (address >= 0xFEA0 && address <= 0xFEFF)
 				return 0xFF; // prohibited
-			else if (address >= 0xFF10 && address <= 0xFF3F)
-				return gb.audio[address - 0xFF10];
 			break;
 	}
 }
-
-
 
 void write_byte(u16 address, u8 value)
 {
 	gb.cycles += 4;
 
-	if (address <= 0x7FFF)								write_cart_byte(address, value);
+	if (address <= 0x7FFF)								cart_write_byte(address, value);
 	else if (address >= 0x8000 && address <= 0x9FFF)	ppu.vram[address - 0x8000] = value;
-	else if (address >= 0xA000 && address <= 0xBFFF)	write_cart_byte(address, value);
-	else if (address >= 0xC000 & address <= 0xCFFF)		gb.wram[address - 0xC000] = value;
-	else if (address >= 0xD000 & address <= 0xDFFF)		gb.wram[address - 0xC000] = value;
+	else if (address >= 0xA000 && address <= 0xBFFF)	cart_write_byte(address, value);
+	else if (address >= 0xC000 && address <= 0xCFFF)	gb.wram[address - 0xC000] = value;
+	else if (address >= 0xD000 && address <= 0xDFFF)	gb.wram[address - 0xC000] = value;
 	else if (address >= 0xE000 && address <= 0xFDFF)	gb.wram[address - 0xE000] = value;
 	else if (address >= 0xFE00 && address <= 0xFE9F)	gb.oam[address - 0xFE00] = value;
 	else if (address >= 0xFEA0 && address <= 0xFEFF)	printf("write: illegal write to prohibited area: %x\n", address);
@@ -150,6 +239,97 @@ void write_io(u16 address, u8 value)
 {
 	switch (address)
 	{
+		case NR10:
+			apu.nr10.raw = value;
+			break;
+
+		case NR11:
+			apu.nr11.raw = value;
+			break;
+
+		case NR12:
+			apu.nr12.raw = value;
+			break;
+
+		case NR13:
+			apu.nr1314.lo = value;
+			break;
+
+		case NR14:
+			apu.nr1314.hi = value;
+			break;
+
+		case NR21:
+			apu.nr21.raw = value;
+			break;
+
+		case NR22:
+			apu.nr22.raw = value;
+			break;
+
+		case NR23:
+			apu.nr2324.lo = value;
+			break;
+
+		case NR24:
+			apu.nr2324.hi = value;
+			break;
+
+		case NR30:
+			apu.nr30.raw = value;
+			break;
+
+		case NR31:
+			apu.nr31 = value;
+			break;
+
+		case NR32:
+			apu.nr32.raw = value;
+			break;
+
+		case NR33:
+			apu.nr3334.lo = value;
+			break;
+
+		case NR34:
+			apu.nr3334.hi = value;
+			break;
+
+		case 0xFF30: case 0xFF31: case 0xFF32: case 0xFF33:
+		case 0xFF34: case 0xFF35: case 0xFF36: case 0xFF37:
+		case 0xFF38: case 0xFF39: case 0xFF3A: case 0xFF3B:
+		case 0xFF3C: case 0xFF3D: case 0xFF3E: case 0xFF3F:
+			apu.wave_pattern_ram[address & 0xF] = value;
+			break;
+
+		case NR41:
+			apu.nr41.raw = value;
+			break;
+
+		case NR42:
+			apu.nr42.raw = value;
+			break;
+
+		case NR43:
+			apu.nr43.raw = value;
+			break;
+
+		case NR44:
+			apu.nr44.raw = value;
+			break;
+
+		case NR50:
+			apu.nr50.raw = value;
+			break;
+
+		case NR51:
+			apu.nr51.raw = value;
+			break;
+
+		case NR52:
+			apu.nr52.raw = (apu.nr52.raw & 0x0F) | (value & 0xF0);
+			break;
+
 		case JOYP:
 			gb.joyp.raw = (value & 0b00110000) | (gb.joyp.raw & 0b11001111);
 			break;
@@ -168,7 +348,6 @@ void write_io(u16 address, u8 value)
 
 		case TIMA:
 			write_tima(value);
-			//gb.tima = value;
 			break;
 
 		case TMA:
@@ -238,13 +417,7 @@ void write_io(u16 address, u8 value)
 		case 0xFF4D: // color gb only
 			break;
 
-		case 0xFF7F: // unimplemented MMIO
-			break;
-
 		default:
-			if (address >= 0xFF10 && address <= 0xFF3F)
-				gb.audio[address - 0xFF10] = value;
-			else
 				printf("Write to unimplemented MMIO: %X\n", address);
 			break;
 	}

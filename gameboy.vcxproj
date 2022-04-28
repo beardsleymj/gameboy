@@ -37,6 +37,7 @@
     <ClCompile Include="src\bus.c" />
     <ClCompile Include="src\mbc\mbc2.c" />
     <ClCompile Include="src\mbc\mbc3.c" />
+    <ClCompile Include="src\mbc\mbc5.c" />
     <ClCompile Include="src\ppu.c" />
     <ClCompile Include="src\renderer.c" />
     <ClCompile Include="src\timers.c" />

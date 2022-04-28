@@ -1,4 +1,5 @@
 #include "timers.h"
+#include "gb_system.h"
 #include "cpu.h"
 
 static const u16 tac_freq[4] = {1024, 16, 64, 256};
@@ -68,7 +69,7 @@ u8 read_tima()
 }
 
 // Writing to tima resets the entire timer regiester supposedly 
-u8 write_tima(u8 value)
+void write_tima(u8 value)
 {
 	gb.tima = value;
 	gb.div = 0;
