@@ -44,8 +44,8 @@ void render_imgui(SDL_Renderer* debug_renderer)
 	ImGui_ImplSDL2_NewFrame();
 	ImGui::NewFrame();
 
-	static float width = 160;
-	static float height = 144;
+	static int width = 160;
+	static int height = 144;
 	ImGui::Begin("Screen");
 	ImGui::Text("Size = %i x %i", width, height);
 	ImGui::Image((void*)(intptr_t)screen_tex, ImVec2(width, height));

@@ -145,11 +145,11 @@ u8 read_io(u16 address)
 			break;
 
 		case TMA:
-			return gb.tma;
+			return cpu.tima;
 			break;
 
 		case TAC:
-			return gb.tac.raw | 0b11111000;
+			return cpu.tac.raw | 0b11111000;
 			break;
 
 		case INTERRUPT_FLAG:
@@ -351,7 +351,7 @@ void write_io(u16 address, u8 value)
 			break;
 
 		case TMA:
-			gb.tma = value;
+			cpu.tima = value;
 			break;
 
 		case TAC:

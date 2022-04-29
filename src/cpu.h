@@ -1,10 +1,10 @@
 #pragma once
 
+#include "types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "types.h"
 
 typedef union registers
 {
@@ -65,6 +65,17 @@ typedef union interrupt_flag
 
 } interrupt_flag; // interrupt flag
 
+typedef union tac
+{
+	u8	raw;
+	struct
+	{
+		u8
+			input_clock_select : 2,
+			timer_enable : 1;
+	};
+} tac_t;
+
 typedef struct cpu
 {
 	registers r;
@@ -72,6 +83,10 @@ typedef struct cpu
 	u16 PC;
 	interrupt_enable interrupt_enable;
 	interrupt_flag interrupt_flag;
+	u8 div;
+	u8 tima;
+	u8 tma;
+	tac_t tac;
 } cpu_t;
 
 extern cpu_t cpu;

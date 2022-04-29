@@ -5,10 +5,11 @@
 #include "timers.h"
 #include "renderer.h"
 #include "ppu.h";
+#include "apu.h"
+#include "audio.h"
 #include "event.h"
 #include "apu.h"
 #include "mbc/cart.h"
-#include "cpu.h"
 #include "SDL.h"
 #include <stdio.h>
 
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
 
 	gb_init(argv[1], bootrom);
 	renderer_init();
-	test_audio();
+	audio_init();
 
 	FILE* log_file = 0;
 	if (debug)
@@ -64,8 +65,10 @@ int main(int argc, char** argv)
 		cpu_run();
 
 		ppu_run();
+		
+		apu_run();
 
-		sync_timing();
+		update_timers();
 
 		if (ppu.draw_frame)
 		{

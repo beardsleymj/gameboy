@@ -175,7 +175,8 @@ void xor(u8 value)
 	cpu.r.CF = 0;
 }
 
-void inc_8(u8 opcode) {
+void inc_8(u8 opcode) 
+{
 	u8 value = 0;
 
 	switch (opcode)	{

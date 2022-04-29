@@ -26,6 +26,7 @@
     <ClCompile Include="dep\imgui\src\imgui_tables.cpp" />
     <ClCompile Include="dep\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="src\apu.c" />
+    <ClCompile Include="src\audio.c" />
     <ClCompile Include="src\imgui_renderer.cpp" />
     <ClCompile Include="src\mbc\cart.c" />
     <ClCompile Include="src\cpu.c" />
@@ -45,6 +46,7 @@
   <ItemGroup>
     <ClInclude Include="dep\imgui\src\imgui_impl_opengl3_loader.h" />
     <ClInclude Include="src\apu.h" />
+    <ClInclude Include="src\audio.h" />
     <ClInclude Include="src\imgui_renderer.h" />
     <ClInclude Include="src\mbc\cart.h" />
     <ClInclude Include="src\cpu.h" />

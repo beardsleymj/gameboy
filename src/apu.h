@@ -1,8 +1,18 @@
 #pragma once
 #include "types.h"
 
- //audio regs
+typedef struct channel
+{
+	u16					frequency_timer; // aka period aka timer
+	u8					envelope_timer;
+	u64					last_freq_timer_cycle;
+	u8					wave_position;
 
+	u16					frequency;
+	u8					volume;
+}channel_t;
+
+ //audio regs
 typedef union sweep_reg
 {
 	u8	raw						: 3;
@@ -32,9 +42,9 @@ typedef union volume_envelope
 	struct
 	{
 		u8
-			no_envelope_sweep	: 3,
-			envelope_direction	: 1,
-			init_vol_envelope	: 4;
+			period				: 3,
+			direction			: 1,
+			volume				: 4;
 	};
 } volume_envelope_t;
 
@@ -46,7 +56,7 @@ typedef union channel_freq
 		u16
 			frequency		: 11,
 							: 3,
-			counter_selct	: 1,
+			counter_select	: 1,
 			initial			: 1;
 	};
 	struct
@@ -152,17 +162,20 @@ typedef union sound_onoff
 typedef struct apu
 {
 	// Channel 1 Tone and Sweep
+	channel_t			ch1;
 	sweep_reg_t			nr10;
 	sound_length_t		nr11;
 	volume_envelope_t	nr12;
 	channel_freq_t		nr1314;
 
 	// Channel 2 Tone
+	channel_t			ch2;
 	sound_length_t		nr21;
 	volume_envelope_t	nr22;
 	channel_freq_t		nr2324;
 
 	// Channel 3 Wave Output
+	channel_t			ch3;
 	sound_switch_t		nr30;
 	u8					nr31;
 	output_lvl_t		nr32;
@@ -170,6 +183,7 @@ typedef struct apu
 	u8					wave_pattern_ram[16];
 
 	// Channel 4
+	channel_t			ch4;
 	sound_length_t		nr41;
 	volume_envelope_t	nr42;
 	polynomial_calc_t	nr43;
@@ -179,11 +193,16 @@ typedef struct apu
 	channel_control_t	nr50;
 	sound_out_select_t  nr51;
 	sound_onoff_t		nr52;
+	u64					frame_sequencer_last_cycle;
+	u16					frame_sequencer;
 
 } apu_t;
 
 extern apu_t apu;
 
-void test_audio();
-void SDLAudioCallback(void* userdata, u8* stream, s64 len);
-
+apu_run();
+u16 get_ch1_freq();
+u16 get_ch2_freq();
+u16 get_ch3_freq();
+u16 get_ch4_freq();
+void update_freq_timer(channel_t* channel, u16 frequency);

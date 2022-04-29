@@ -7,14 +7,14 @@ ppu_t ppu;
 
 void ppu_run() 
 {	
-	if (gb.ppu_cycles <= gb.cycles) 
+	if (gb.ppu_cycles <= gb.cycles)	
 	{
 		switch (gb.ppu_next_mode) 
 		{
-			case 0:	hblank();	break;
-			case 1:	vblank();	break;
-			case 2:	oam_search();	break;
-			case 3:	draw_scanline();	break;
+			case 0:	hblank(); break;
+			case 1:	vblank(); break;
+			case 2:	oam_search(); break;
+			case 3:	draw_scanline(); break;
 		}
 	}
 }

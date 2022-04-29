@@ -116,7 +116,8 @@ u8 cart_read_byte(u16 address)
 	{
 		case 0: 
 			if (address >= 0 && address <= 0x7FFF)
-			return cart.rom[address];
+				return cart.rom[address];
+			return 0xFF;
 			break;
 
 		case 1:

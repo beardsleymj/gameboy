@@ -14,9 +14,9 @@ void gb_init(char* rom_path, bool bootrom)
 	gb.ime_delay = 0;
 	gb.halt = 0;
 	gb.stop = 0;
-	gb.tma = 0x00;
-	gb.tima = 0x00;
-	gb.tac.raw = 0x00;
+	cpu.tima = 0x00;
+	cpu.tima = 0x00;
+	cpu.tac.raw = 0x00;
 	if (bootrom && !load_bootrom())
 	{
 		gb.bootrom_disabled = 0;

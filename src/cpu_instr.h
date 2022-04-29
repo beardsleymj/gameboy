@@ -3,7 +3,7 @@
 #include "types.h"
 
 void ld_hl_sp_i8();
-void push(u8);
+void push(u16*);
 void pop(u8);
 void add(u8);
 void add16(u16);

@@ -24,16 +24,7 @@ typedef union joypad
 	};
 }joypad_t;
 
-typedef union tac
-{
-	u8	raw;
-	struct
-	{
-		u8
-			input_clock_select	: 2,
-			timer_enable		: 1;
-	};
-} tac_t;
+
 
 typedef struct gameboy 
 {
@@ -52,10 +43,7 @@ typedef struct gameboy
 	joypad_t joyp;
 	u8 sb; // Serial transfer data (R/W)
 	u8 sc; // Serial transfer control (R/W)
-	u8 div;
-	u8 tima;
-	u8 tma;
-	tac_t tac;
+
 
 	// timing
 	uint64_t cycles;

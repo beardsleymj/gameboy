@@ -77,6 +77,9 @@
     <ClCompile Include="src\mbc\mbc5.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\audio.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\timers.h">
@@ -119,6 +122,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dep\imgui\src\imgui_impl_opengl3_loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
