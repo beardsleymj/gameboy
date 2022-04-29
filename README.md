@@ -1,5 +1,5 @@
 # gameboy
-Game Boy emulator written in C that can play some games. It was created as a project for learning about emulation.
+A Game Boy emulator written in C that can play a decent amount of commercial games. It was created as a project for learning about emulation.
 
 ![Pokemon](https://raw.githubusercontent.com/beardsleymj/gameboy/master/screenshots/pokemon1.png)
 ![Pokemon](https://raw.githubusercontent.com/beardsleymj/gameboy/master/screenshots/pokemon2.png)
