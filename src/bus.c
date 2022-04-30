@@ -433,10 +433,12 @@ void dma_transfer()
 	u16 address = ppu.dma * 0x100;
 	if (address >= 0xE000)
 		address -= 0x2000;
+
 	for (u8 i = 0; i < 0xA0; i++)
 	{
 		gb.oam[i] = read_byte(address + i);
 	}
+
 	gb.cycles -= 4 * 160;
 }
 

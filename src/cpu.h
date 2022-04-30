@@ -1,5 +1,4 @@
 #pragma once
-
 #include "types.h"
 
 #ifdef __cplusplus
@@ -92,6 +91,8 @@ typedef struct cpu
 extern cpu_t cpu;
 
 void cpu_run();
+void handle_interrupts();
+void execute_instruction();
 void prefix_cb();
 
 #ifdef __cplusplus

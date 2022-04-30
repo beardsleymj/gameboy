@@ -33,7 +33,13 @@ void cpu_run()
 		}
 	}
 
-	// Handle Interrupts
+	handle_interrupts();
+
+	execute_instruction();
+}
+
+void handle_interrupts()
+{
 	if (gb.IME && (cpu.interrupt_enable.raw & cpu.interrupt_flag.raw))
 	{
 		write_byte(--cpu.SP, (cpu.PC >> 8));
@@ -45,32 +51,44 @@ void cpu_run()
 		{
 			cpu.PC = 0x40;
 			cpu.interrupt_flag.vblank = 0;
+			return;
 		}
-		else if (cpu.interrupt_enable.stat && cpu.interrupt_flag.stat)
+		
+		if (cpu.interrupt_enable.stat && cpu.interrupt_flag.stat)
 		{
 			cpu.PC = 0x48;
 			cpu.interrupt_flag.stat = 0;
+			return;
 		}
-		else if (cpu.interrupt_enable.timer && cpu.interrupt_flag.timer)
+		
+		if (cpu.interrupt_enable.timer && cpu.interrupt_flag.timer)
 		{
 			cpu.PC = 0x50;
 			cpu.interrupt_flag.timer = 0;
+			return;
 		}
-		else if (cpu.interrupt_enable.serial && cpu.interrupt_flag.serial)
+		
+		if (cpu.interrupt_enable.serial && cpu.interrupt_flag.serial)
 		{
 			cpu.PC = 0x58;
 			cpu.interrupt_flag.serial = 0;
+			return;
 		}
-		else if (cpu.interrupt_enable.joypad && cpu.interrupt_flag.joypad)
+		
+		if (cpu.interrupt_enable.joypad && cpu.interrupt_flag.joypad)
 		{
 			cpu.PC = 0x60;
 			cpu.interrupt_flag.joypad = 0;
+			return;
 		}
 	}
+}
 
+void execute_instruction()
+{
 	u8 opcode = read_byte(cpu.PC++);
-		
-	switch (opcode) 
+
+	switch (opcode)
 	{
 		// 8-bit Load Instructions
 		case 0x40: cpu.r.B = cpu.r.B; break;
@@ -168,7 +186,7 @@ void cpu_run()
 		case 0xE2: write_byte(0xFF00 + cpu.r.C, cpu.r.A); break;
 		case 0xF2: cpu.r.A = read_byte(0xFF00 + cpu.r.C); break;
 		case 0xEA: write_byte(read_word(cpu.PC), cpu.r.A); cpu.PC += 2; break;
-		case 0xFA: cpu.r.A = read_byte(read_word(cpu.PC)); cpu.PC+= 2; break;
+		case 0xFA: cpu.r.A = read_byte(read_word(cpu.PC)); cpu.PC += 2; break;
 
 			// 16-bit Load Instructions
 		case 0x01: cpu.r.BC = read_byte(cpu.PC++) | (read_byte(cpu.PC++) << 8); break;
@@ -177,18 +195,16 @@ void cpu_run()
 		case 0xF8: ld_hl_sp_i8(); break;
 		case 0x31: cpu.SP = read_byte(cpu.PC++) | (read_byte(cpu.PC++) << 8); break;
 		case 0xF9: cpu.SP = cpu.r.HL; gb.cycles += 4; break;
-		case 0x08: {
-			u16 address = read_byte(cpu.PC++) | (read_byte(cpu.PC++) << 8);
-			write_byte(address, cpu.SP & 0xFF);
-			write_byte(address + 1, cpu.SP >> 8);
-		}
-		break;
-		case 0xC5: case 0xD5: case 0xE5: case 0xF5:
-			push(opcode);
-			break;
-		case 0xC1: case 0xD1: case 0xE1: case 0xF1:
-			pop(opcode);
-			break;
+		case 0x08: ld_a16_sp(); break;
+		case 0xC5: push(&cpu.r.BC); break;
+		case 0xD5: push(&cpu.r.DE); break;
+		case 0xE5: push(&cpu.r.HL); break;
+		case 0xF5: push(&cpu.r.AF); break;
+
+		case 0xC1: pop(&cpu.r.BC); break;
+		case 0xD1: pop(&cpu.r.DE); break;
+		case 0xE1: pop(&cpu.r.HL); break;
+		case 0xF1: pop_af(); break;
 
 		case 0x80: add(cpu.r.B); break;
 		case 0x81: add(cpu.r.C); break;
@@ -199,10 +215,10 @@ void cpu_run()
 		case 0x86: add(read_byte(cpu.r.HL)); break;
 		case 0x87: add(cpu.r.A); break;
 		case 0xC6: add(read_byte(cpu.PC++)); break;
-		case 0x09: add16(cpu.r.BC); break;
-		case 0x19: add16(cpu.r.DE); break;
-		case 0x29: add16(cpu.r.HL); break;
-		case 0x39: add16(cpu.SP); break;
+		case 0x09: add_16(cpu.r.BC); break;
+		case 0x19: add_16(cpu.r.DE); break;
+		case 0x29: add_16(cpu.r.HL); break;
+		case 0x39: add_16(cpu.SP); break;
 		case 0xE8: add_sp_i8();	break;
 
 		case 0x88: adc(cpu.r.B); break;
@@ -259,7 +275,7 @@ void cpu_run()
 		case 0xAE: xor (read_byte(cpu.r.HL)); break;
 		case 0xAF: xor (cpu.r.A); break;
 		case 0xEE: xor (read_byte(cpu.PC++)); break;
-				
+
 		case 0xB0: or (cpu.r.B); break;
 		case 0xB1: or (cpu.r.C); break;
 		case 0xB2: or (cpu.r.D); break;
@@ -269,7 +285,7 @@ void cpu_run()
 		case 0xB6: or (read_byte(cpu.r.HL)); break;
 		case 0xB7: or (cpu.r.A); break;
 		case 0xF6: or (read_byte(cpu.PC++)); break;
-				
+
 		case 0xB8: cp(cpu.r.B); break;
 		case 0xB9: cp(cpu.r.C); break;
 		case 0xBA: cp(cpu.r.D); break;
@@ -279,13 +295,18 @@ void cpu_run()
 		case 0xBE: cp(read_byte(cpu.r.HL)); break;
 		case 0xBF: cp(cpu.r.A); break;
 		case 0xFE: cp(read_byte(cpu.PC++)); break;
-				
-		case 0x04: case 0x14: case 0x24: case 0x34: case 0x0C: case 0x1C: case 0x2C: case 0x3C:
-			inc_8(opcode);
-			break;
-		case 0x03: case 0x13: case 0x23: case 0x33:
-			inc_16(opcode);
-			break;
+		case 0x04: inc_8(&cpu.r.B); break;
+		case 0x14: inc_8(&cpu.r.D); break;
+		case 0x24: inc_8(&cpu.r.H); break;
+		case 0x34: inc_hl(); break;
+		case 0x0C: inc_8(&cpu.r.C); break;
+		case 0x1C: inc_8(&cpu.r.E); break;
+		case 0x2C: inc_8(&cpu.r.L); break;
+		case 0x3C: inc_8(&cpu.r.A); break;
+		case 0x03: inc_16(&cpu.r.BC); break;
+		case 0x13: inc_16(&cpu.r.DE); break;
+		case 0x23: inc_16(&cpu.r.HL); break;
+		case 0x33: inc_16(&cpu.SP); break;
 		case 0x05: dec(&cpu.r.B); break;
 		case 0x0D: dec(&cpu.r.C); break;
 		case 0x15: dec(&cpu.r.D); break;
@@ -300,26 +321,29 @@ void cpu_run()
 		case 0x3B: dec16(&cpu.SP); break;
 		case 0x27: daa(); break;
 		case 0x2F: cpl(); break;
-
-		case 0x20: case 0x30: case 0x18: case 0x28: case 0x38:
-			jr(opcode);
-			break;
-				
+		case 0x18: jr(1); break;
+		case 0x20: jr(!cpu.r.ZF); break;
+		case 0x30: jr(!cpu.r.CF); break;
+		case 0x28: jr(cpu.r.ZF); break;
+		case 0x38: jr(cpu.r.CF); break;
 		case 0xCB: prefix_cb(); break;
-				
-		case 0xC2: jp(read_byte(cpu.PC++) + (read_byte(cpu.PC++) << 8), opcode); break;
-		case 0xD2: jp(read_byte(cpu.PC++) + (read_byte(cpu.PC++) << 8), opcode); break;
-		case 0xCA: jp(read_byte(cpu.PC++) + (read_byte(cpu.PC++) << 8), opcode); break;
-		case 0xDA: jp(read_byte(cpu.PC++) + (read_byte(cpu.PC++) << 8), opcode); break;
+		case 0xC3: jp(true); break;
+		case 0xC2: jp(!cpu.r.ZF); break;
+		case 0xD2: jp(!cpu.r.CF); break;
+		case 0xCA: jp(cpu.r.ZF); break;
+		case 0xDA: jp(cpu.r.CF); break;
 		case 0xE9: cpu.PC = cpu.r.HL; break;
-		case 0xC3: cpu.PC = (read_byte(cpu.PC++) + (read_byte(cpu.PC++) << 8)); break;
-				
-		case 0xC4: case 0xD4: case 0xCC: case 0xDC: case 0xCD:
-			call(opcode);
-			break;
-		case 0xC0: case 0xD0: case 0xC8: case 0xD8: case 0xC9: case 0xD9:
-			ret(opcode);
-			break;
+		case 0xC4: call(!cpu.r.ZF); break;
+		case 0xD4: call(!cpu.r.CF); break;
+		case 0xCC: call(cpu.r.ZF); break;
+		case 0xDC: call(cpu.r.CF); break;
+		case 0xCD: call(true); break;
+		case 0xC0: ret_f(!cpu.r.ZF); break;
+		case 0xD0: ret_f(!cpu.r.CF); break;
+		case 0xC8: ret_f(cpu.r.ZF); break;
+		case 0xD8: ret_f(cpu.r.CF); break;
+		case 0xC9: ret(true); break;
+		case 0xD9: reti(); break;
 		case 0xC7: rst(0x00); break;
 		case 0xD7: rst(0x10); break;
 		case 0xE7: rst(0x20); break;
@@ -331,7 +355,7 @@ void cpu_run()
 		case 0x3F: ccf(); break;
 		case 0x37: scf(); break;
 		case 0x00: break; // noop
-		case 0x10: break; // STOP: TODO
+		case 0x10: printf("stop \n");  break; // STOP: TODO
 		case 0x76: halt(); break;
 		case 0xF3: di(); break;
 		case 0xFB: ei(); break;

@@ -1,6 +1,7 @@
 #include "cpu_instr.h"
 #include "cpu.h"
 #include "gb_system.h"
+#include "bus.h"
 
 void ld_hl_sp_i8() 
 {
@@ -13,52 +14,29 @@ void ld_hl_sp_i8()
 	gb.cycles += 4;
 }
 
-void push(u8 opcode) 
+void ld_a16_sp()
 {
-	gb.cycles += 4;
-	switch (opcode)	
-	{
-		case 0xC5:
-			write_byte(--cpu.SP, cpu.r.B);
-			write_byte(--cpu.SP, cpu.r.C);
-			break;
-		case 0xD5:
-			write_byte(--cpu.SP, cpu.r.D);
-			write_byte(--cpu.SP, cpu.r.E);
-			break;
-		case 0xE5:
-			write_byte(--cpu.SP, cpu.r.H);
-			write_byte(--cpu.SP, cpu.r.L);
-			break;
-		case 0xF5:
-			write_byte(--cpu.SP, cpu.r.A);
-			write_byte(--cpu.SP, cpu.r.F);
-			break;
-	}
+	u16 address = read_byte(cpu.PC++) | (read_byte(cpu.PC++) << 8);
+	write_byte(address, cpu.SP & 0xFF);
+	write_byte(address + 1, cpu.SP >> 8);
 }
 
-void pop(u8 opcode) 
+void push(u16* data)
 {
-	switch (opcode)	
-	{
-		case 0xC1:
-			cpu.r.C = read_byte(cpu.SP++);
-			cpu.r.B = read_byte(cpu.SP++);
-			break;
-		case 0xD1:
-			cpu.r.E = read_byte(cpu.SP++);
-			cpu.r.D = read_byte(cpu.SP++);
-			break;
-		case 0xE1:
-			cpu.r.L = read_byte(cpu.SP++);
-			cpu.r.H = read_byte(cpu.SP++);
-			break;
-		case 0xF1:
-			cpu.r.F = read_byte(cpu.SP++);
-			cpu.r.A = read_byte(cpu.SP++);
-			cpu.r.F = (cpu.r.F & 0xF0);
-			break;
-	}
+	gb.cycles += 4;
+	write_byte(--cpu.SP, (*data) >> 8);
+	write_byte(--cpu.SP, (*data) & 0xFF);
+}
+
+void pop(u16* data)
+{
+	*data = (read_byte(cpu.SP++) & 0xFF) | (read_byte(cpu.SP++) << 8);
+}
+
+void pop_af()
+{
+	pop(&cpu.r.AF);
+	cpu.r.AF = cpu.r.AF & 0xFFF0;
 }
 
 void add(u8 value) 
@@ -70,7 +48,7 @@ void add(u8 value)
 	cpu.r.ZF = cpu.r.A == 0;
 }
 
-void add16(u16 value) 
+void add_16(u16 value) 
 {
 	cpu.r.NF = 0;
 	cpu.r.HF = (cpu.r.HL & 0x0FFF) + (value & 0x0FFF) > 0x0FFF;
@@ -175,70 +153,43 @@ void xor(u8 value)
 	cpu.r.CF = 0;
 }
 
-void inc_8(u8 opcode) 
+void inc_8(u8* data)
 {
-	u8 value = 0;
-
-	switch (opcode)	{
-		case 0x04:
-			value = ++cpu.r.B;
-			break;
-		case 0x14:
-			value = ++cpu.r.D;
-			break;
-		case 0x24:
-			value = ++cpu.r.H;
-			break;
-		case 0x34:
-			write_byte(cpu.r.HL, read_byte(cpu.r.HL) + 1);
-			value = read_byte(cpu.r.HL);
-			break;
-		case 0x0C:
-			value = ++cpu.r.C;
-			break;
-		case 0x1C:
-			value = ++cpu.r.E;
-			break;
-		case 0x2C:
-			value = ++cpu.r.L;
-			break;
-		case 0x3C:
-			value = ++cpu.r.A;
-			break;
-	}
-	cpu.r.ZF = value == 0;
+	(*data)++;
+	cpu.r.ZF = *data == 0;
 	cpu.r.NF = 0;
-	cpu.r.HF = (value & 0x0F) == 0x00; // 0bXXXX0000
+	cpu.r.HF = (*data & 0x0F) == 0x00;
 }
 
-void inc_16(u8 opcode) 
+void inc_hl()
 {
-	switch (opcode)	
-	{
-		case 0x03: cpu.r.BC++; break;
-		case 0x13: cpu.r.DE++; break;
-		case 0x23: cpu.r.HL++; break;
-		case 0x33: cpu.SP++; break;
-	}
+	u8 data = read_byte(cpu.r.HL);
+	inc_8(&data);
+	write_byte(cpu.r.HL, data);
+}
+
+void inc_16(u16* data) 
+{
 	gb.cycles += 4;
+	(*data)++;
 }
 
-void dec(u8* byte) 
+void dec(u8* data) 
 {
-	cpu.r.HF = (*byte & 0x0F) == 0;
-	*byte = *byte - 1;
-	cpu.r.ZF = (*byte == 0);
+	cpu.r.HF = (*data & 0x0F) == 0;
+	*data = *data - 1;
+	cpu.r.ZF = (*data == 0);
 	cpu.r.NF = 1;
 }
 
 void dec_hl() 
 {
-	u8 byte = read_byte(cpu.r.HL);
-	cpu.r.HF = (byte & 0x0F) == 0;
-	byte = byte - 1;
-	cpu.r.ZF = (byte == 0);
+	u8 data = read_byte(cpu.r.HL);
+	cpu.r.HF = (data & 0x0F) == 0;
+	data = data - 1;
+	cpu.r.ZF = (data == 0);
 	cpu.r.NF = 1;
-	write_byte(cpu.r.HL, byte);
+	write_byte(cpu.r.HL, data);
 }
 
 void dec16(u16* word) 
@@ -280,33 +231,21 @@ void cpl()
 	cpu.r.HF = 1;
 }
 
-void jp(u16 address, u8 opcode) {
-	bool jump = true;
-	switch (opcode)	
+void jp(bool jump) 
+{
+	u16 address = read_byte(cpu.PC++) + (read_byte(cpu.PC++) << 8);
+
+	if (jump) 
 	{
-		case 0xC2: jump = !cpu.r.ZF; break;
-		case 0xD2: jump = !cpu.r.CF; break;
-		case 0xCA: jump = cpu.r.ZF; break;
-		case 0xDA: jump = cpu.r.CF; break;
-	}
-	if (jump) {
 		gb.cycles += 4;
 		cpu.PC = address;
 	}
 }
 
-void call(u8 opcode) 
+void call(bool jump) 
 {
-	bool jump = true;
-	switch (opcode) 
-	{
-		case 0xC4: jump = !cpu.r.ZF; break;
-		case 0xD4: jump = !cpu.r.CF; break;
-		case 0xCC: jump = cpu.r.ZF; break;
-		case 0xDC: jump = cpu.r.CF; break;
-		case 0xCD: break;
-	}
-	u16 nn = (read_byte(cpu.PC++) | (read_byte(cpu.PC++) << 8));
+	u16 nn = read_byte(cpu.PC++) | (read_byte(cpu.PC++) << 8);
+
 	if (jump) 
 	{
 		write_byte(--cpu.SP, (cpu.PC >> 8));
@@ -324,21 +263,14 @@ void rst(u8 vec)
 	cpu.PC = vec;
 }
 
-void jr(u8 opcode) 
+void jr(bool jump) 
 {
-	bool jump = true;
-	switch (opcode) 
-	{
-		case 0x20: jump = !cpu.r.ZF; break;
-		case 0x30: jump = !cpu.r.CF; break;
-		case 0x28: jump = cpu.r.ZF; break;
-		case 0x38: jump = cpu.r.CF;	break;
-	}
-	u8 value = read_byte(cpu.PC++);
+	s8 data = read_byte(cpu.PC++);
+	
 	if (jump) 
 	{
 		gb.cycles += 4;
-		cpu.PC += (int8_t)value;
+		cpu.PC += data;
 	}
 }
 
@@ -359,39 +291,26 @@ void cp(u8 value)
 	cpu.r.CF = (cpu.r.A < value);
 }
 
-void ret(u8 opcode) 
+void ret_f(bool jump)
 {
-	bool jump = true;
-	switch (opcode)	
-	{
-		case 0xC0:
-			jump = !cpu.r.ZF;
-			gb.cycles += 4;
-			break;
-		case 0xD0:
-			jump = !cpu.r.CF;
-			gb.cycles += 4;
-			break;
-		case 0xC8:
-			jump = cpu.r.ZF;
-			gb.cycles += 4;
-			break;
-		case 0xD8: 
-			jump = cpu.r.CF;
-			gb.cycles += 4;
-			break;
-		case 0xC9:
-			break;
-		case 0xD9:
-			gb.IME = 1;
-			break;
-	}
+	gb.cycles += 4;
+	ret(jump);
+}
+
+void ret(bool jump) 
+{
 	if (jump) 
 	{
-		gb.cycles += 4;
+		gb.cycles += 8;
 		cpu.PC = read_word(cpu.SP); 
 		cpu.SP += 2;
 	}
+}
+
+void reti()
+{
+	ret(true);
+	gb.IME = 1;
 }
 
 void scf() 
@@ -430,108 +349,108 @@ void di()
 }
 
 // CB
-u8 rlc(u8 byte) 
+u8 rlc(u8 data) 
 {
-	cpu.r.CF = (byte >> 7);
-	byte = (byte << 1) + cpu.r.CF;
-	cpu.r.ZF = (byte == 0);
+	cpu.r.CF = (data >> 7);
+	data = (data << 1) + cpu.r.CF;
+	cpu.r.ZF = (data == 0);
 	cpu.r.NF = 0;
 	cpu.r.HF = 0;
-	return byte;
+	return data;
 }
 
-u8 rrc(u8 byte) 
+u8 rrc(u8 data) 
 {
-	cpu.r.CF = (byte & 0x01);
-	byte = (byte >> 1) + (cpu.r.CF << 7);
-	cpu.r.ZF = (byte == 0);
+	cpu.r.CF = (data & 0x01);
+	data = (data >> 1) + (cpu.r.CF << 7);
+	cpu.r.ZF = (data == 0);
 	cpu.r.NF = 0;
 	cpu.r.HF = 0;
-	return byte;
+	return data;
 }
 
-u8 rl(u8 byte) 
+u8 rl(u8 data) 
 {
-	u8 bit = (byte >> 7);
-	byte = (byte << 1) + (cpu.r.CF);
-	cpu.r.NF = 0;
-	cpu.r.HF = 0;
-	cpu.r.CF = bit;
-	cpu.r.ZF = (byte == 0);
-	return byte;
-}
-
-u8 rr(u8 byte) 
-{
-	u8 bit = (byte & 0x01);
-	byte = (byte >> 1) + (cpu.r.CF << 7);
+	u8 bit = (data >> 7);
+	data = (data << 1) + (cpu.r.CF);
 	cpu.r.NF = 0;
 	cpu.r.HF = 0;
 	cpu.r.CF = bit;
-	cpu.r.ZF = (byte == 0);
-	return byte;
+	cpu.r.ZF = (data == 0);
+	return data;
 }
 
-u8 sla(u8 byte) 
+u8 rr(u8 data) 
 {
-	cpu.r.CF = (byte >> 7);
-	byte <<= 1;
-	cpu.r.ZF = (byte == 0);
+	u8 bit = (data & 0x01);
+	data = (data >> 1) + (cpu.r.CF << 7);
 	cpu.r.NF = 0;
 	cpu.r.HF = 0;
-	return byte;
+	cpu.r.CF = bit;
+	cpu.r.ZF = (data == 0);
+	return data;
 }
 
-u8 sra(u8 byte) 
+u8 sla(u8 data) 
 {
-	cpu.r.CF = (byte & 0x01);
-	byte = (byte >> 1) | (byte & 0x80);
-	cpu.r.ZF = (byte == 0);
+	cpu.r.CF = (data >> 7);
+	data <<= 1;
+	cpu.r.ZF = (data == 0);
 	cpu.r.NF = 0;
 	cpu.r.HF = 0;
-	return byte;
+	return data;
 }
 
-u8 swap(u8 byte) 
+u8 sra(u8 data) 
 {
-	u8 temp = byte;
-	byte = byte >> 4;
-	byte = byte + (temp << 4);
-	cpu.r.ZF = (byte == 0);
+	cpu.r.CF = (data & 0x01);
+	data = (data >> 1) | (data & 0x80);
+	cpu.r.ZF = (data == 0);
+	cpu.r.NF = 0;
+	cpu.r.HF = 0;
+	return data;
+}
+
+u8 swap(u8 data) 
+{
+	u8 temp = data;
+	data = data >> 4;
+	data = data + (temp << 4);
+	cpu.r.ZF = (data == 0);
 	cpu.r.NF = 0;
 	cpu.r.HF = 0;
 	cpu.r.CF = 0;
-	return byte;
+	return data;
 }
 
-u8 srl(u8 byte) 
+u8 srl(u8 data) 
 {
 	cpu.r.NF = 0;
 	cpu.r.HF = 0;
-	cpu.r.CF = (byte) & 0x01;
-	byte = (byte >> 1);
-	cpu.r.ZF = (byte == 0);
-	return byte;
+	cpu.r.CF = (data) & 0x01;
+	data = (data >> 1);
+	cpu.r.ZF = (data == 0);
+	return data;
 }
 
-u8 bit(u8 bit, u8 byte) 
+u8 bit(u8 bit, u8 data) 
 {
-	cpu.r.ZF = ((byte >> bit) & 0x01) == 0;
+	cpu.r.ZF = ((data >> bit) & 0x01) == 0;
 	cpu.r.NF = 0;
 	cpu.r.HF = 1;
-	return byte;
+	return data;
 }
 
-u8 res(u8 bit, u8 byte) 
+u8 res(u8 bit, u8 data) 
 {
 	u8 temp = (1 << bit);
-	byte &= ~temp;
-	return byte;
+	data &= ~temp;
+	return data;
 }
 
-u8 set(u8 bit, u8 byte) 
+u8 set(u8 bit, u8 data) 
 {
 	u8 temp = (1 << bit);
-	byte |= temp;
-	return byte;
+	data |= temp;
+	return data;
 }

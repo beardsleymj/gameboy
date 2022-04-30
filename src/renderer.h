@@ -1,11 +1,11 @@
 #pragma once
 
+#include "gb_system.h"
+#include "SDL.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "gb_system.h"
-#include "SDL.h"
 
 void renderer_init();
 void render();

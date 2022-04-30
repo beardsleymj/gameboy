@@ -1,10 +1,9 @@
 #pragma once
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "types.h"
 
 #define DMG_CLOCK_FREQ 0x400000
 #define DIV_FREQ 0x4000

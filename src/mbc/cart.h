@@ -1,11 +1,10 @@
 #pragma once
+#include "../types.h"
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "../types.h"
-#include <stdio.h>
 
 typedef enum banking_modes { simple, advanced } banking_modes;
 
