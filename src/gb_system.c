@@ -1,5 +1,6 @@
 #include "gb_system.h"
 #include "mbc/cart.h"
+#include "bus.h"
 #include "cpu.h"
 #include "ppu.h"
 #include "apu.h"
@@ -36,27 +37,29 @@ void gb_init(char* rom_path, bool bootrom)
 		cpu.r.BC = 0x0013;
 		cpu.r.DE = 0x00D8;
 		cpu.r.HL = 0x014D;
-		apu.nr10.raw = 0x80;
-		apu.nr11.raw = 0xBF;
-		apu.nr12.raw = 0xF3;
-		apu.nr1314.lo = 0xFF;
-		apu.nr1314.hi = 0xBF;
-		apu.nr21.raw = 0x3F;
-		apu.nr22.raw = 0xFF;
-		apu.nr2324.lo = 0xFF;
-		apu.nr2324.hi = 0xBF;
-		apu.nr30.raw = 0x7F;
-		apu.nr31 = 0xFF;
-		apu.nr32.raw = 0x9F;
-		apu.nr3334.lo = 0xFF;
-		apu.nr3334.hi = 0xBF;
-		apu.nr41.raw = 0xFF;
-		apu.nr42.raw = 0x00;
-		apu.nr43.raw = 0x00;
-		apu.nr44.raw = 0xBF;
-		apu.nr50.raw = 0xFF;
-		apu.nr51.raw = 0xF3;
-		apu.nr52.raw = 0xF1;
+
+		write_io(NR10, 0x80);
+		write_io(NR11, 0xBF);
+		write_io(NR12, 0xF3);
+		write_io(NR13, 0xFF);
+		write_io(NR14, 0xBF);
+		write_io(NR21, 0x3F);
+		write_io(NR22, 0xFF);
+		write_io(NR23, 0xFF);
+		write_io(NR24, 0xBF);
+		write_io(NR30, 0x7F);
+		write_io(NR31, 0xFF);
+		write_io(NR32, 0x9F);
+		write_io(NR33, 0xFF);
+		write_io(NR34, 0xBF);
+		write_io(NR41, 0xFF);
+		write_io(NR42, 0x00);
+		write_io(NR43, 0x00);
+		write_io(NR44, 0xBF);
+		write_io(NR50, 0xFF);
+		write_io(NR51, 0xF3);
+		write_io(NR52, 0xF1);
+
 		ppu.lcdc.raw = 0x91;
 		ppu.scy = 0x00;
 		ppu.scx = 0x00;

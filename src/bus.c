@@ -35,15 +35,21 @@ u8 read_io(u16 address)
 	switch (address)
 	{
 		case NR10:
-			return apu.nr10.raw | 0b10000000;
+			return ((apu.square1.sweep_shift & 0b111) << 0)
+				 | ((apu.square1.sweep_direction & 1) << 3)
+				 | ((apu.square1.sweep_frequency & 0b111) << 4)
+				 | 0b10000000;
 			break;
 
 		case NR11:
-			return apu.nr11.raw | 0b00111111;
+			return ((apu.square1.duty & 0b11) << 6)
+				 | 0b00111111;
 			break;
 
 		case NR12:
-			return apu.nr12.raw;
+			return ((apu.square1.envelope_period & 0b111) << 0)
+				 | ((apu.square1.envelope_direction & 1) << 3)
+				 | ((apu.square1.envelope_volume & 0b1111) << 4);
 			break;
 
 		case NR13:
@@ -51,15 +57,19 @@ u8 read_io(u16 address)
 			break;
 
 		case NR14:
-			return apu.nr1314.hi | 0b10000111;
+			return ((apu.square1.counter << 6) & 1)
+				 | 0b10111111;
 			break;
 
 		case NR21:
-			return apu.nr21.raw | 0b00111111;
+			return ((apu.square2.duty & 0b11) << 6)
+				 | 0b00111111;
 			break;
 
 		case NR22:
-			return apu.nr22.raw;
+			return ((apu.square2.envelope_period & 0b111) << 0)
+				 | ((apu.square2.envelope_direction & 1) << 3)
+				 | ((apu.square2.volume & 0b1111) << 4);
 			break;
 
 		case NR23:
@@ -67,11 +77,13 @@ u8 read_io(u16 address)
 			break;
 
 		case NR24:
-			return apu.nr2324.raw | 0b10111000;
+			return ((apu.square2.counter & 1) << 6)
+				 | 0b10111111;
 			break;
 
 		case NR30:
-			return apu.nr30.raw | 0b01111111;
+			return ((apu.wave.dac_enable & 1) << 7)
+				 | 0b01111111;
 			break;
 
 		case NR31:
@@ -79,7 +91,8 @@ u8 read_io(u16 address)
 			break;
 
 		case NR32:
-			return apu.nr32.raw | 0b10011111;
+			return ((apu.wave.volume & 0B11) << 5)
+				 | 0b10011111;
 			break;
 
 		case NR33:
@@ -87,41 +100,62 @@ u8 read_io(u16 address)
 			break;
 
 		case NR34:
-			return apu.nr3334.hi | 0b10111000;
+			return ((apu.wave.counter & 1) << 6)
+				 | 0b10111000;
 			break;
 
 		case 0xFF30: case 0xFF31: case 0xFF32: case 0xFF33:
 		case 0xFF34: case 0xFF35: case 0xFF36: case 0xFF37:
 		case 0xFF38: case 0xFF39: case 0xFF3A: case 0xFF3B:
 		case 0xFF3C: case 0xFF3D: case 0xFF3E: case 0xFF3F:
-			return apu.wave_pattern_ram[address & 0xF];
+			return apu.wave.pattern[address & 0xF] | 0xF0;
 
 		case NR41:
 			return 0xFF;
 			break;
 
 		case NR42:
-			return apu.nr42.raw;
+			return ((apu.noise.envelope_period & 0b111) << 0)
+				 | ((apu.noise.envelope_direction & 1) << 3)
+				 | ((apu.noise.envelope_volume & 0b1111) << 4);
 			break;
 
 		case NR43:
-			return apu.nr43.raw;
+			return ((apu.noise.divisor & 0b111) << 0)
+				 | ((apu.noise.counter & 1) << 3)
+				 | ((apu.noise.frequency & 0b1111) << 4);
 			break;
 
 		case NR44:
-			return apu.nr44.raw | 0b10111111;
+			return ((apu.noise.counter & 1) << 6)
+				 | 0b10111111;
 			break;
 
 		case NR50:
-			return apu.nr50.raw;
+			return ((apu.sequencer.right_volume & 0b111) << 0)
+				 | ((apu.sequencer.right_enable & 1) << 3)
+				 | ((apu.sequencer.left_volume & 0b111) << 4)
+				 | ((apu.sequencer.left_enable & 1) << 7);
 			break;
 
 		case NR51:
-			return apu.nr51.raw;
+			return ((apu.square1.enable_right & 1) << 0)
+				 | ((apu.square2.enable_right & 1) << 1)
+				 | ((apu.wave.enable_right	  & 1) << 2)
+				 | ((apu.noise.enable_right	  & 1) << 3)
+				 | ((apu.square1.enable_left  & 1) << 4)
+				 | ((apu.square2.enable_left  & 1) << 5)
+				 | ((apu.wave.enable_left     & 1) << 6)
+				 | ((apu.noise.enable_left    & 1) << 7);
 			break;
 
 		case NR52:
-			return apu.nr52.raw | 0b10001111;
+			return ((apu.square1.enable   & 1) << 0)
+				 | ((apu.square2.enable   & 1) << 1)
+				 | ((apu.wave.enable      & 1) << 2)
+				 | ((apu.noise.enable     & 1) << 3)
+				 | ((apu.sequencer.enable & 1) << 7)
+				 | 0b01110000;
 			break;
 
 		case JOYP:
@@ -240,94 +274,132 @@ void write_io(u16 address, u8 value)
 	switch (address)
 	{
 		case NR10:
-			apu.nr10.raw = value;
+			apu.square1.sweep_frequency = (value >> 0) & 0b111;
+			apu.square1.sweep_direction = (value >> 3) & 1;
+			apu.square1.sweep_shift = (value >> 4) & 0b111;
 			break;
 
 		case NR11:
-			apu.nr11.raw = value;
+			apu.square1.length = 64 - (value >> 0) & 0b111111;
+			apu.square1.duty = (value >> 6) & 0b11;
 			break;
 
 		case NR12:
-			apu.nr12.raw = value;
+			apu.square1.envelope_period = (value >> 0) & 0b111;
+			apu.square1.envelope_period = (value >> 3) & 1;
+			apu.square1.envelope_volume = (value >> 4) & 0b1111;
 			break;
 
 		case NR13:
-			apu.nr1314.lo = value;
+			apu.square1.frequency = (apu.square1.frequency & 0b11100000000) | value;
 			break;
 
 		case NR14:
-			apu.nr1314.hi = value;
+			apu.square1.frequency = (apu.square1.frequency & 0xFF) | ((value & 0b111) << 8);
+			apu.square1.counter = (value >> 6) & 0b1;
+			if ((value >> 7) & 1 == 1)
+				square1_trigger();
 			break;
 
 		case NR21:
-			apu.nr21.raw = value;
+			apu.square2.length = (value >> 0) & 0b111111;
+			apu.square2.duty = (value >> 6) & 0b11;
 			break;
 
 		case NR22:
-			apu.nr22.raw = value;
+			apu.square2.envelope_period = (value >> 0) & 0b111;
+			apu.square2.envelope_direction = (value >> 3) & 1;
+			apu.square2.envelope_volume = (value >> 4) & 0b1111;
 			break;
 
 		case NR23:
-			apu.nr2324.lo = value;
+			apu.square2.frequency = (apu.square1.frequency & 0b11100000000) | value;
 			break;
 
 		case NR24:
-			apu.nr2324.hi = value;
+			apu.square2.frequency = (apu.square2.frequency & 0xFF) | ((value & 0b111) << 8);
+			apu.square2.counter = (value >> 6) & 1;
+			if ((value >> 7) & 1 == 1)
+				square2_trigger();			
 			break;
 
 		case NR30:
-			apu.nr30.raw = value;
+			apu.wave.dac_enable = value & 1;
 			break;
 
 		case NR31:
-			apu.nr31 = value;
+			apu.wave.length = 256 - value;
 			break;
 
 		case NR32:
-			apu.nr32.raw = value;
+			apu.wave.volume = (value >> 5) & 0b11;
 			break;
 
 		case NR33:
-			apu.nr3334.lo = value;
+			apu.wave.frequency = (apu.wave.frequency & 0b11100000000) | value;
 			break;
 
 		case NR34:
-			apu.nr3334.hi = value;
+			apu.wave.frequency = (apu.wave.frequency & 0xFF) | ((value & 0b111) << 8);
+			apu.wave.counter = (value >> 6) & 1;
+			if ((value >> 7) & 1 == 1)
+				wave_trigger();
 			break;
 
 		case 0xFF30: case 0xFF31: case 0xFF32: case 0xFF33:
 		case 0xFF34: case 0xFF35: case 0xFF36: case 0xFF37:
 		case 0xFF38: case 0xFF39: case 0xFF3A: case 0xFF3B:
 		case 0xFF3C: case 0xFF3D: case 0xFF3E: case 0xFF3F:
-			apu.wave_pattern_ram[address & 0xF] = value;
+			apu.wave.pattern[address & 0xF] = value;
 			break;
 
 		case NR41:
-			apu.nr41.raw = value;
+			apu.noise.length = 64 - (value & 0b111111);
 			break;
 
 		case NR42:
-			apu.nr42.raw = value;
+			apu.noise.envelope_period = (value >> 0) & 0b111;
+			apu.noise.envelope_direction = (value >> 3) & 1;
+			apu.noise.envelope_volume = (value >> 4) & 0b1111;
 			break;
 
 		case NR43:
-			apu.nr43.raw = value;
+			apu.noise.divisor = (value >> 0) & 0b11;
+			apu.noise.counter = (value >> 3) & 0b1;
+			apu.noise.frequency = (value >> 4) & 0b1111;
 			break;
 
 		case NR44:
-			apu.nr44.raw = value;
+			apu.noise.counter = (value >> 6) & 1;
+			if ((value >> 7) & 1 == 1)
+				noise_trigger();
 			break;
 
 		case NR50:
-			apu.nr50.raw = value;
+			apu.sequencer.right_volume = (value >> 0) & 0b111;
+			apu.sequencer.right_enable = (value >> 3) & 1;
+			apu.sequencer.left_volume = (value >> 4) & 0b111;
+			apu.sequencer.left_enable = (value >> 7) & 1;
 			break;
 
 		case NR51:
-			apu.nr51.raw = value;
+			apu.square1.enable_right = (value >> 0) & 1;
+			apu.square2.enable_right = (value >> 1) & 1;
+			apu.wave.enable_right	 = (value >> 2) & 1;
+			apu.noise.enable_right   = (value >> 3) & 1;
+			apu.square1.enable_right = (value >> 4) & 1;
+			apu.square2.enable_right = (value >> 5) & 1;
+			apu.wave.enable_right    = (value >> 6) & 1;
+			apu.noise.enable_right   = (value >> 7) & 1;
 			break;
 
 		case NR52:
-			apu.nr52.raw = (apu.nr52.raw & 0x0F) | (value & 0xF0);
+			if (apu.sequencer.enable != (value >> 7) & 1)
+			{
+				apu.sequencer.enable = (value >> 7) & 1;
+
+				// add code here to reset the channels / sequencer
+			}
 			break;
 
 		case JOYP:
