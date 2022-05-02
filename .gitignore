@@ -365,8 +365,5 @@ FodyWeavers.xsd
 # Bootrom
 dmg01.gb
 
-# Dependencies
-dep/
-
 # Imgui Config
 imgui.ini
