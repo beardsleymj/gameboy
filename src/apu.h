@@ -104,9 +104,9 @@ typedef struct apu
 	struct sequencer
 	{
         bool left_enable;
-        u8 left_volume : 3;
+        u8 left_volume;
         bool right_enable;
-        u8 right_volume : 3;
+        u8 right_volume;
 
         //struct Channel {
         //    bool leftEnable;
@@ -123,7 +123,12 @@ typedef struct apu
 
 extern apu_t apu;
 
+void square1_run();
 void apu_run();
+void square1_run();
+void square2_run();
+void wave_run();
+void noise_run();
 void square1_trigger();
 void square2_trigger();
 void wave_trigger();

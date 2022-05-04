@@ -113,7 +113,7 @@ void oam_search()
 	 fill_buffer(scanline);
 }
 
-void draw_bg(u8 *scanline)
+void draw_bg(u8* scanline)
 {
 	u16 line_offset = ((ppu.scx) / 8) & 0x1F;
 	u16 window_map_addr = ppu.lcdc.win_tile_map ? 0x1C00 : 0x1800;
@@ -181,8 +181,6 @@ void draw_bg(u8 *scanline)
 	if (ppu.window_draw_flag)
 		ppu.window_internal_line_counter++;
 }
-
-
 
 void draw_obj(u8* scanline)
 {
@@ -306,4 +304,18 @@ void increment_ly()
 	ppu.stat.lyc_ly_flag = ppu.ly == ppu.lyc;
 	if (ppu.stat.lyc_ly_int_enable && ppu.stat.lyc_ly_flag)
 		cpu.interrupt_flag.stat = 1;
+}
+
+void dma_transfer()
+{
+	u16 address = ppu.dma * 0x100;
+	if (address >= 0xE000)
+		address -= 0x2000;
+
+	for (u8 i = 0; i < 0xA0; i++)
+	{
+		gb.oam[i] = read_byte(address + i);
+	}
+
+	gb.cycles -= 4 * 160;
 }

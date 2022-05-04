@@ -10,23 +10,20 @@ u8 read_byte(u16 address)
 {
 	gb.cycles += 4;
 
-	if (gb.bootrom_disabled == 0 && address < 0x100)	return gb.bootrom[address];
-	else if (address <= 0x7FFF)							return cart_read_byte(address);
-	else if (address >= 0x8000 && address <= 0x9FFF)	return ppu.vram[address & 0x1FFF];
-	else if (address >= 0xA000 && address <= 0xBFFF)	return cart_read_byte(address);
-	else if (address >= 0xC000 && address <= 0xCFFF)	return gb.wram[address & 0x1FFF];
-	else if (address >= 0xD000 && address <= 0xDFFF)	return gb.wram[address & 0x1FFF];
-	else if (address >= 0xE000 && address <= 0xFDFF)	return gb.wram[address & 0x1FFF];
-	else if (address >= 0xFE00 && address <= 0xFE9F)	return gb.oam[address & 0xFF];
-	else if (address >= 0xFF00 && address <= 0xFF7F)	return read_io(address);
-	else if (address >= 0xFF80 && address <= 0xFFFE)	return gb.hram[address & 0x7F];
-	else if (address == INTERRUPT_ENABLE)				return cpu.interrupt_enable.raw;
-	else if (address == 0xFF7F)							return 0xFF; // UNUSED Memory Mapped IO returns OxFF, add more
-	else
-	{
-		printf("Unimplemented Read Address: %X\n", address);
-		return 0xFF;
-	}
+	if (gb.bootrom_disabled == 0 && address < 0x100) return gb.bootrom[address];
+	if (address >= 0x0000 && address <= 0x7FFF)	return cart_read_byte(address);
+	if (address >= 0x8000 && address <= 0x9FFF)	return ppu.vram[address & 0x1FFF];
+	if (address >= 0xA000 && address <= 0xBFFF)	return cart_read_byte(address);
+	if (address >= 0xC000 && address <= 0xCFFF)	return gb.wram[address & 0x1FFF];
+	if (address >= 0xD000 && address <= 0xDFFF)	return gb.wram[address & 0x1FFF];
+	if (address >= 0xE000 && address <= 0xFDFF)	return gb.wram[address & 0x1FFF];
+	if (address >= 0xFE00 && address <= 0xFE9F)	return gb.oam[address & 0xFF];
+	if (address >= 0xFF00 && address <= 0xFF7F)	return read_io(address);
+	if (address >= 0xFF80 && address <= 0xFFFE)	return gb.hram[address & 0x7F];
+	if (address == INTERRUPT_ENABLE)			return cpu.interrupt_enable.raw;
+	if (address == 0xFF7F)						return 0xFF; // UNUSED Memory Mapped IO returns OxFF, add more
+	printf("Unimplemented Read Address: %X\n", address);
+	return 0xFF;
 }
 
 // unmapped io bits / regs will return 1 for now
@@ -498,20 +495,6 @@ void write_io(u16 address, u8 value)
 u16 read_word(u16 address)
 {
 	return (read_byte(address + 1) << 8) |  read_byte(address);
-}
-
-void dma_transfer()
-{
-	u16 address = ppu.dma * 0x100;
-	if (address >= 0xE000)
-		address -= 0x2000;
-
-	for (u8 i = 0; i < 0xA0; i++)
-	{
-		gb.oam[i] = read_byte(address + i);
-	}
-
-	gb.cycles -= 4 * 160;
 }
 
 u8 read_joyp()
