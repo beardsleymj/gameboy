@@ -1,7 +1,5 @@
-###############################################################################
 # Set default behavior to automatically normalize line endings.
-###############################################################################
 * text=auto
 
 # ignore dependency folder for languages
-dep/* linguist-vendored
+dep/**/* linguist-vendored
