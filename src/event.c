@@ -3,7 +3,9 @@
 #include "renderer.h"
 #include "imgui_renderer.h"
 
-bool handle_events() 
+bool quit;
+
+void handle_events() 
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -15,14 +17,14 @@ bool handle_events()
 				switch (event.window.event)
 				{	// closing both windows for now, maybe do one later
 					case SDL_WINDOWEVENT_CLOSE:
-						return 1;
+						quit = true;
 						//SDL_DestroyWindow();
 						break;
 				}
 				break;
 
 			case SDL_QUIT:
-				return 1;
+				quit = true;
 				break;
 
 			case SDL_KEYDOWN:
@@ -30,7 +32,7 @@ bool handle_events()
 				switch (event.key.keysym.sym)
 				{
 					case SDLK_ESCAPE:
-						return 1;
+						quit = true;
 						break;
 
 					case SDLK_1 :
@@ -40,7 +42,6 @@ bool handle_events()
 			}
 		}
 	}
-	return 0;
 }
 
 void update_gb_keystate()

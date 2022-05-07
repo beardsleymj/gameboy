@@ -13,7 +13,6 @@
 #include "SDL.h"
 #include <stdio.h>
 
-
 gameboy_t gb;
 
 void print_status(FILE* f);
@@ -54,7 +53,6 @@ int main(int argc, char** argv)
 		log_file = fopen("output.log", "w");
 	}
 
-	bool quit = false;
 	while (quit == false)
 	{
 		if (debug)
@@ -72,12 +70,13 @@ int main(int argc, char** argv)
 
 		if (ppu.draw_frame)
 		{
-			quit = handle_events();
+			handle_events();
 			render();
 		}
 	}
 
 	cart_write_save();
+	fclose(cart.savefile);
 
 	if (debug)
 	{

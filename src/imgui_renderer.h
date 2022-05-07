@@ -1,5 +1,6 @@
 #pragma once
 #include "SDL.h"
+#include "glad/glad.h"
 
 #ifdef __cplusplus
 extern "C" 
@@ -7,8 +8,12 @@ extern "C"
 #endif
 
 void process_imgui_event(SDL_Event* event);
-void init_imgui(SDL_Window* window, SDL_Renderer* gl_context, SDL_Texture* tex);
-void render_imgui(SDL_Renderer* debug_renderer);
+void init_imgui(SDL_Window* win, SDL_GLContext gl_context, GLuint gl_texture);
+void render_imgui();
+void draw_menu_bar();
+void draw_system();
+void draw_debugger();
+void draw_memory_editor();
 
 #ifdef __cplusplus
 }

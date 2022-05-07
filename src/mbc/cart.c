@@ -180,5 +180,4 @@ void cart_write_save()
 
 	fseek(cart.savefile, 0, SEEK_SET);
 	fwrite(cart.sram, cart.ram_size, 1, cart.savefile);
-	fclose(cart.savefile);
 }

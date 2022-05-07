@@ -19,10 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dep\glad\src\glad.c" />
     <ClCompile Include="dep\imgui\src\imgui.cpp" />
     <ClCompile Include="dep\imgui\src\imgui_draw.cpp" />
+    <ClCompile Include="dep\imgui\src\imgui_impl_opengl3.cpp" />
     <ClCompile Include="dep\imgui\src\imgui_impl_sdl.cpp" />
-    <ClCompile Include="dep\imgui\src\imgui_impl_sdlrenderer.cpp" />
     <ClCompile Include="dep\imgui\src\imgui_tables.cpp" />
     <ClCompile Include="dep\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="src\apu.c" />
@@ -201,7 +202,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\dep\SDL2-2.0.22\include;$(SolutionDir)\dep\glew-2.2.0\include;$(SolutionDir)\dep\imgui\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\dep\SDL2-2.0.22\include;$(ProjectDir)\dep\imgui\include;$(ProjectDir)dep\glad\include</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>

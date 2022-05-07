@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gb_system.h"
-#include "SDL.h"
 
 #ifdef __cplusplus
 extern "C" {
