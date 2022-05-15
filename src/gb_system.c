@@ -85,6 +85,9 @@ void gb_init(char* rom_path, bool bootrom)
 	ppu.vblanks = 0;
 	ppu.draw_frame = 0;
 
+	// apu
+	apu_init();
+
 	// joypad
 	gb.joyp.raw = 0XFF;
 	gb.up = 1;

@@ -54,7 +54,7 @@ u8 read_tima()
 void write_div() 
 {
 	cpu.div = 0;
-	cpu.tima = 0; // timer uses same internal counter as div
+	//cpu.tima = 0; // timer uses same internal counter as div
 	gb.last_div_cycle = gb.cycles;
 	gb.last_tima_cycle = gb.cycles;
 }

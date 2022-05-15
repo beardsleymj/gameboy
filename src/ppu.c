@@ -317,5 +317,5 @@ void dma_transfer()
 		gb.oam[i] = read_byte(address + i);
 	}
 
-	gb.cycles -= 4 * 160;
+	gb.cycles -= 4 * 0xA0;
 }

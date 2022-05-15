@@ -34,7 +34,7 @@ u8 read_io(u16 address)
 		case NR10:
 			return ((apu.square1.sweep_shift & 0b111) << 0)
 				 | ((apu.square1.sweep_direction & 1) << 3)
-				 | ((apu.square1.sweep_frequency & 0b111) << 4)
+				 | ((apu.square1.sweep_period & 0b111) << 4)
 				 | 0b10000000;
 			break;
 
@@ -66,7 +66,7 @@ u8 read_io(u16 address)
 		case NR22:
 			return ((apu.square2.envelope_period & 0b111) << 0)
 				 | ((apu.square2.envelope_direction & 1) << 3)
-				 | ((apu.square2.volume & 0b1111) << 4);
+				 | ((apu.square2.envelope_volume & 0b1111) << 4);
 			break;
 
 		case NR23:
@@ -105,7 +105,8 @@ u8 read_io(u16 address)
 		case 0xFF34: case 0xFF35: case 0xFF36: case 0xFF37:
 		case 0xFF38: case 0xFF39: case 0xFF3A: case 0xFF3B:
 		case 0xFF3C: case 0xFF3D: case 0xFF3E: case 0xFF3F:
-			return apu.wave.pattern[address & 0xF] | 0xF0;
+			return apu.wave.ram[(address & 0xF) * 2] << 4
+				| apu.wave.ram[(address & 0xF) * 2 + 1] << 0;
 
 		case NR41:
 			return 0xFF;
@@ -271,17 +272,19 @@ void write_io(u16 address, u8 value)
 	switch (address)
 	{
 		case NR10:
-			apu.square1.sweep_frequency = (value >> 0) & 0b111;
+			apu.square1.sweep_shift = (value >> 0) & 0b111;
 			apu.square1.sweep_direction = (value >> 3) & 1;
-			apu.square1.sweep_shift = (value >> 4) & 0b111;
+			apu.square1.sweep_period = (value >> 4) & 0b111;
 			break;
 
 		case NR11:
-			apu.square1.length = 64 - (value >> 0) & 0b111111;
+			apu.square1.length_timer = 64 - (value >> 0) & 0b111111;
 			apu.square1.duty = (value >> 6) & 0b11;
 			break;
 
 		case NR12:
+			apu.square1.dac_enable = (value & 0b11111000) != 0; // clear top 5 bits enable dac
+			if (!apu.square1.dac_enable) apu.square1.enable = false;
 			apu.square1.envelope_period = (value >> 0) & 0b111;
 			apu.square1.envelope_period = (value >> 3) & 1;
 			apu.square1.envelope_volume = (value >> 4) & 0b1111;
@@ -299,18 +302,20 @@ void write_io(u16 address, u8 value)
 			break;
 
 		case NR21:
-			apu.square2.length = (value >> 0) & 0b111111;
+			apu.square2.length_timer = 64 - (value >> 0) & 0b111111;
 			apu.square2.duty = (value >> 6) & 0b11;
 			break;
 
 		case NR22:
+			apu.square2.dac_enable = (value & 0b11111000) != 0; // clear top 5 bits enable dac
+			if (!apu.square2.dac_enable) apu.square2.enable = false;
 			apu.square2.envelope_period = (value >> 0) & 0b111;
 			apu.square2.envelope_direction = (value >> 3) & 1;
 			apu.square2.envelope_volume = (value >> 4) & 0b1111;
 			break;
 
 		case NR23:
-			apu.square2.frequency = (apu.square1.frequency & 0b11100000000) | value;
+			apu.square2.frequency = (apu.square2.frequency & 0b11100000000) | value;
 			break;
 
 		case NR24:
@@ -321,11 +326,11 @@ void write_io(u16 address, u8 value)
 			break;
 
 		case NR30:
-			apu.wave.dac_enable = value & 1;
+			apu.wave.dac_enable = (value >> 7);
 			break;
 
 		case NR31:
-			apu.wave.length = 256 - value;
+			apu.wave.length_timer = 256 - value;
 			break;
 
 		case NR32:
@@ -347,14 +352,17 @@ void write_io(u16 address, u8 value)
 		case 0xFF34: case 0xFF35: case 0xFF36: case 0xFF37:
 		case 0xFF38: case 0xFF39: case 0xFF3A: case 0xFF3B:
 		case 0xFF3C: case 0xFF3D: case 0xFF3E: case 0xFF3F:
-			apu.wave.pattern[address & 0xF] = value;
+			apu.wave.ram[(address & 0xF) * 2] = value >> 4;
+			apu.wave.ram[(address & 0xF) * 2 + 1] = value & 0b1111;
 			break;
 
 		case NR41:
-			apu.noise.length = 64 - (value & 0b111111);
+			apu.noise.length_timer = 64 - (value & 0b111111);
 			break;
 
 		case NR42:
+			apu.noise.dac_enable = (value & 0b11111000) != 0; // clear top 5 bits enable dac
+			if (!apu.noise.dac_enable) apu.noise.enable = false;
 			apu.noise.envelope_period = (value >> 0) & 0b111;
 			apu.noise.envelope_direction = (value >> 3) & 1;
 			apu.noise.envelope_volume = (value >> 4) & 0b1111;
@@ -362,7 +370,7 @@ void write_io(u16 address, u8 value)
 
 		case NR43:
 			apu.noise.divisor = (value >> 0) & 0b11;
-			apu.noise.counter = (value >> 3) & 0b1;
+			apu.noise.lfsr_width = (value >> 3) & 0b1;
 			apu.noise.frequency = (value >> 4) & 0b1111;
 			break;
 
@@ -382,12 +390,12 @@ void write_io(u16 address, u8 value)
 		case NR51:
 			apu.square1.enable_right = (value >> 0) & 1;
 			apu.square2.enable_right = (value >> 1) & 1;
-			apu.wave.enable_right	 = (value >> 2) & 1;
-			apu.noise.enable_right   = (value >> 3) & 1;
-			apu.square1.enable_right = (value >> 4) & 1;
-			apu.square2.enable_right = (value >> 5) & 1;
-			apu.wave.enable_right    = (value >> 6) & 1;
-			apu.noise.enable_right   = (value >> 7) & 1;
+			apu.wave.enable_right = (value >> 2) & 1;
+			apu.noise.enable_right = (value >> 3) & 1;
+			apu.square1.enable_left = (value >> 4) & 1;
+			apu.square2.enable_left = (value >> 5) & 1;
+			apu.wave.enable_left = (value >> 6) & 1;
+			apu.noise.enable_left   = (value >> 7) & 1;
 			break;
 
 		case NR52:

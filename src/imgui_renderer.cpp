@@ -9,6 +9,7 @@
 #include "gb_system.h"
 #include "cpu.h"
 #include "ppu.h"
+#include "apu.h"
 #include "renderer.h"
 #include "event.h"
 #include "SDL_opengl.h"
@@ -239,12 +240,15 @@ void draw_memory_editor()
 			data = ppu.vram;
 			size = 0x2000;
 			break;
+		case 4:
+			data = (u8*)apu.samples.buffer;
 	}
 	ImGui::Begin("Memory Editor", &show_memory_editor);
 	ImGui::RadioButton("ROM", &e, 0); ImGui::SameLine();
 	ImGui::RadioButton("SRAM", &e, 1); ImGui::SameLine();
 	ImGui::RadioButton("WRAM", &e, 2); ImGui::SameLine();
-	ImGui::RadioButton("VRAM", &e, 3);
+	ImGui::RadioButton("VRAM", &e, 3); ImGui::SameLine();
+	ImGui::RadioButton("APU Samples BUffer", &e, 4);
 	memory_editor.DrawContents(data, size);
 	ImGui::End();
 }

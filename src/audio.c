@@ -7,48 +7,46 @@ static SDL_AudioSpec audio_spec;
 SDL_AudioSpec request;
 SDL_AudioDeviceID audio_device;
 
-//SAMPLE_RATE 48000;
-//BUFFER_SIZE 1024;
-
-
 void audio_init()
 {
+    if (SDL_Init(SDL_INIT_AUDIO))
+        printf("SDL Failed to Initialize Audio");
+
     SDL_memset(&audio_spec, 0, sizeof(audio_spec));
-    audio_spec.freq = 4800;
-    audio_spec.format = AUDIO_S16LSB;
-    audio_spec.channels = 2;
-    audio_spec.samples = 4096;
+    audio_spec.freq = SAMPLE_RATE;
+    audio_spec.format = AUDIO_S8;
+    audio_spec.channels = 2; // THERE IS ONLY 1 CHANNEL RIGHT NOW
+    audio_spec.samples = SAMPLES;
     audio_spec.silence = 0;
-    audio_spec.callback = audio_callback;
-    audio_spec.userdata = &apu;
+    //audio_spec.callback = audio_callback;
 
-    audio_device = SDL_OpenAudioDevice(NULL, 0, &audio_spec, 0, SDL_AUDIO_ALLOW_ANY_CHANGE);
-
-    SDL_PauseAudio(0);
-    //SDL_Delay(5000);
-    SDL_CloseAudio();
-    //SDL_QueueAudio(1, data, len);
+    audio_device = SDL_OpenAudioDevice(NULL, 0, &audio_spec, 0, 0);
+    const char* device = SDL_GetAudioDeviceName(audio_device, 0);
+    if (device != NULL)
+        printf(device);
+	
+    SDL_PauseAudioDevice(audio_device, 0);
 }
 
-static Uint8* audio_chunk;
-static Uint32 audio_len;
-static Uint8* audio_pos;
+void audio_queue_sample(s8 *data)
+{	
+    int queue_size = SDL_GetQueuedAudioSize(audio_device);
+    if (queue_size > SAMPLE_BUFFER_SIZE)
+    {
+        //printf("%i size ", queue_size);
+        return;
+    }
 
+    apu.samples.buffer[apu.samples.write_index++] = *data;
+    if (apu.samples.write_index == SAMPLE_BUFFER_SIZE)
+    {
+        apu.samples.write_index = 0;
+        
+        SDL_QueueAudio(audio_device, apu.samples.buffer, sizeof(apu.samples.buffer));
+    }
+}
 
-void audio_callback(void* userdata, u8* stream, int len)
+void audio_clear()
 {
-    //float* out = (float*)stream;
-    //for (int i = 0; i < len / sizeof(float); i++)
-    //{
-    //    if (apu.buffer_size.read_index < apu.buffer_size.write_index)
-    //    {
-    //        apu.apu_last_sample = apu.bigbuffer.buf[(apu->bigbuffer.read_index++) % AUDIO_BIGBUFFER_SIZE];
-    //    }
-    //}
-
-    //for (int i = 0; i < len; i++)
-    //    stream[i] = i;
-
-    //*out++ = apu->apu_last_sample
+    SDL_ClearQueuedAudio(audio_device);
 }
-

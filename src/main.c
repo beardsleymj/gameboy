@@ -61,13 +61,10 @@ int main(int argc, char** argv)
 		}
 
 		cpu_run();
-
 		ppu_run();
-		
 		apu_run();
-
 		update_timers();
-
+		
 		if (ppu.draw_frame)
 		{
 			handle_events();
@@ -76,7 +73,9 @@ int main(int argc, char** argv)
 	}
 
 	cart_write_save();
-	fclose(cart.savefile);
+	
+	if (cart.savefile != NULL) 
+		fclose(cart.savefile);
 
 	if (debug)
 	{

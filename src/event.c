@@ -2,6 +2,7 @@
 #include "event.h"
 #include "renderer.h"
 #include "imgui_renderer.h"
+#include "audio.h"
 
 bool quit;
 
@@ -37,6 +38,7 @@ void handle_events()
 
 					case SDLK_1 :
 						cap_framerate = !cap_framerate;
+						audio_clear();
 						break;
 				}
 			}

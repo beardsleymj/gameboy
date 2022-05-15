@@ -75,7 +75,7 @@ typedef union tac
 	};
 } tac_t;
 
-typedef struct cpu
+typedef struct 
 {
 	registers r;
 	u16 SP;
