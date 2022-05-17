@@ -23,7 +23,8 @@ void apu_init()
 
 void apu_run()
 {
-	// sync apu with cpu, apu runs at half cpu speed
+	// sync apu with cpu. I read that the apu runs at half cpu speed so i think 
+	// this can be run half as much and the frequency timers adjusted eventually
 	while (gb.cycles >= apu.cycles)
 	{
 		apu.cycles++;
@@ -51,7 +52,6 @@ void apu_run()
 				noise_length();
 				break;
 			case 1:
-
 				break;
 
 			case 2:
@@ -59,12 +59,10 @@ void apu_run()
 				square2_length();
 				wave_length();
 				noise_length();
-
 				square1_sweep();
 				break;
 
 			case 3:
-
 				break;
 
 			case 4:
@@ -75,7 +73,6 @@ void apu_run()
 				break;
 
 			case 5:
-
 				break;
 
 			case 6:
@@ -83,7 +80,6 @@ void apu_run()
 				square2_length();
 				wave_length();
 				noise_length();
-
 				square1_sweep();
 				break;
 
@@ -95,6 +91,7 @@ void apu_run()
 		}
 	}
 
+	// 87 cycles for dmg
 	while (gb.cycles - apu.last_sequencer_sync > DMG_CLOCK_FREQ / SAMPLE_RATE)
 	{
 		apu.last_sequencer_sync += DMG_CLOCK_FREQ / SAMPLE_RATE;
@@ -115,7 +112,7 @@ void square1_run()
 		apu.square1.duty_output = wave_duty_table[apu.square1.duty * 8 + apu.square1.phase];
 	}
 
-	u8 sample = apu.square1.duty_output * apu.square1.volume * apu.square1.enable;
+	u8 sample = apu.square1.dac_enable * apu.square1.duty_output * apu.square1.volume * apu.square1.enable;
 
 	apu.square1.output = sample;
 }
@@ -179,190 +176,163 @@ void noise_run()
 
 void square1_length()
 {
-	if (apu.square1.counter && apu.square1.length_timer > 0)
+	if (apu.square1.counter)
 	{
-		apu.square1.length_timer--;
 		if (apu.square1.length_timer == 0)
+		{
 			apu.square1.enable = false;
+		}
+		else
+		{
+			apu.square1.length_timer--;
+		}
 	}
 }
 
 void square2_length()
 {
-	if (apu.square2.counter && apu.square2.length_timer > 0)
+	if (apu.square2.counter)
 	{
-		apu.square2.length_timer--;
 		if (apu.square2.length_timer == 0)
+		{
 			apu.square2.enable = false;
+		}
+		else
+		{
+			apu.square1.length_timer--;
+		}
 	}
 }
 
 void wave_length()
 {
-	if (apu.wave.counter && apu.wave.length_timer > 0)
+	if (apu.wave.counter)
 	{
-		apu.wave.length_timer--;
 		if (apu.wave.length_timer == 0)
+		{
 			apu.wave.enable = false;
+		}
+		else
+		{
+			apu.wave.length_timer--;
+		}
 	}
 }
 
 void noise_length()
 {
-	if (apu.noise.counter && apu.noise.length_timer > 0)
+	if (apu.noise.counter)
 	{
-		apu.noise.length_timer--;
 		if (apu.noise.length_timer == 0)
+		{
 			apu.noise.enable = false;
+		}
+		else
+		{
+			apu.noise.length_timer--;			
+		}
 	}
 }
 
 void square1_sweep()
 {
-	if (apu.square1.sweep_timer > 0)
+	if (apu.square1.sweep_enable && apu.square1.sweep_period > 0)
 	{
-		apu.square1.sweep_timer--;
-	}
-
-	if (apu.square1.sweep_timer == 0)
-	{
-		if (apu.square1.sweep_period > 0)
+		if (apu.square1.sweep_timer == 0)
 		{
 			apu.square1.sweep_timer = apu.square1.sweep_period;
-		}
-		else
-		{
-			apu.square1.sweep_timer = 8;
-		}
 
-		if (apu.square1.sweep_enable && apu.square1.sweep_period > 0)
-		{
-			u8 new_frequency = calculate_new_frequency();
+			s16 diff = apu.square1.frequency_shadow >> apu.square1.sweep_shift;
 			
-			if (new_frequency <= 2047 && apu.square1.sweep_shift > 0)
+			if (apu.square1.sweep_direction) diff *= -1;
+			apu.square1.frequency_shadow += diff;
+
+			if (apu.square1.frequency_shadow > 2047)
 			{
-				apu.square1.frequency = new_frequency;
-				apu.square1.frequency_shadow = new_frequency;
+				apu.square1.enable = false;
 			}
-			
-			// for overflow check
-			calculate_new_frequency();
+			else
+			{
+				apu.square1.frequency = apu.square1.frequency_shadow;
+			}
 		}
 	}
-}
 
-u8 calculate_new_frequency()
-{
-	u8 new_frequency = apu.square1.frequency_shadow >> apu.square1.sweep_shift;
-
-
-	// 0 = add, 1 = subtract
-	if (apu.square1.sweep_direction)
-	{
-		new_frequency = apu.square1.frequency_shadow - new_frequency;
-	}
-	else
-	{
-		new_frequency = apu.square1.frequency_shadow + new_frequency;
-	}
-
-	// for overflow check
-	if (new_frequency > 2047)
-	{
-		apu.square1.enable = false;
-	}
-
-	return new_frequency;
+	if (apu.square1.sweep_timer > 0) apu.square1.sweep_timer--;
 }
 
 void square1_envelope()
 {
-	if (apu.square1.envelope_period == 0)
-		return;
-
-	if (apu.square1.envelope_period_timer > 0)
-		apu.square1.envelope_period_timer--;
-
-	if (apu.square1.envelope_period_timer == 0)
+	if (apu.square1.envelope_timer == 0)
 	{
-		apu.square1.envelope_period_timer = apu.square1.envelope_period ? apu.square1.envelope_period : 8;
+		apu.square1.envelope_timer = apu.square1.envelope_period;
+		if (apu.square1.envelope_period != 0)
+		{
+			if (apu.square1.volume < 0xF && apu.square1.envelope_direction == 1)
+				apu.square1.volume++;
 
-		if (apu.square1.volume < 0xF && apu.square1.envelope_direction == 1)
-			apu.square1.volume++;
-
-		if (apu.square1.volume > 0 && apu.square1.envelope_direction == 0)
-			apu.square1.volume--;
+			if (apu.square1.volume > 0 && apu.square1.envelope_direction == 0)
+				apu.square1.volume--;
+		}
 	}
+
+	if (apu.square1.envelope_timer > 0)
+		apu.square1.envelope_timer--;
 }
 
 void square2_envelope()
 {
-	if (apu.square2.envelope_period == 0)
-		return;
-	
-	if (apu.square2.envelope_period_timer > 0)
-		apu.square2.envelope_period_timer--;
-	
-	if (apu.square2.envelope_period_timer == 0)
+	if (apu.square2.envelope_timer == 0)
 	{
-		apu.square2.envelope_period_timer = apu.square2.envelope_period ? apu.square2.envelope_period : 8;
+		apu.square2.envelope_timer = apu.square2.envelope_period;
+		if (apu.square2.envelope_period != 0)
+		{
+			if (apu.square2.volume < 0xF && apu.square2.envelope_direction == 1)
+				apu.square2.volume++;
 
-		if (apu.square2.volume < 0xF && apu.square2.envelope_direction == 1)
-			apu.square2.volume++;
-		
-		if (apu.square2.volume > 0 && apu.square2.envelope_direction == 0)
-			apu.square2.volume--;
+			if (apu.square2.volume > 0 && apu.square2.envelope_direction == 0)
+				apu.square2.volume--;
+		}
 	}
+
+	if (apu.square2.envelope_timer > 0)
+		apu.square2.envelope_timer--;
 }
 
 void noise_envelope()
 {
-	if (apu.noise.envelope_period == 0)
-		return;
-
-	if (apu.noise.envelope_period_timer > 0)
-		apu.noise.envelope_period_timer--;
-
-	if (apu.noise.envelope_period_timer == 0)
+	if (apu.noise.envelope_timer == 0)
 	{
-		apu.noise.envelope_period_timer = apu.noise.envelope_period ? apu.noise.envelope_period : 8;
+		apu.noise.envelope_timer = apu.noise.envelope_period;
+		if (apu.noise.envelope_period != 0)
+		{
+			if (apu.noise.volume < 0xF && apu.noise.envelope_direction == 1)
+				apu.noise.volume++;
 
-		if (apu.noise.volume < 0xF && apu.noise.envelope_direction == 1)
-			apu.noise.volume++;
-
-		if (apu.noise.volume > 0 && apu.noise.envelope_direction == 0)
-			apu.noise.volume--;
+			if (apu.noise.volume > 0 && apu.noise.envelope_direction == 0)
+				apu.noise.volume--;
+		}
 	}
+
+	if (apu.noise.envelope_timer > 0)
+		apu.noise.envelope_timer--;
 }
 
 void square1_trigger()
 {
 	apu.square1.enable = apu.square1.dac_enable;
 	apu.square1.frequency_timer = (2048 - apu.square1.frequency) * 4;
-	apu.square1.envelope_period_timer = apu.square1.envelope_period ? apu.square1.envelope_period : 8;
 	apu.square1.volume = apu.square1.envelope_volume;
 	if (apu.square1.length_timer == 0) apu.square1.length_timer = 64;	
-	
 	apu.square1.frequency_shadow = apu.square1.frequency;
-	
 	apu.square1.sweep_timer = apu.square1.sweep_period;
-	if (apu.square1.sweep_timer == 0)
-		apu.square1.sweep_timer = 8;
-		
-	if (apu.square1.sweep_period != 0 || apu.square1.sweep_shift != 0)
-		apu.square1.sweep_enable = true;
-
-	
-	// for overflow check
-	if (apu.square1.sweep_shift != 0)
-		calculate_new_frequency();
+	apu.square1.sweep_enable = (apu.square1.sweep_period != 0 || apu.square1.sweep_shift != 0);
 }
 
 void square2_trigger()
 {
 	apu.square2.enable = apu.square2.dac_enable;
 	apu.square2.frequency_timer = (2048 - apu.square2.frequency) * 4;
-	apu.square2.envelope_period_timer = apu.square2.envelope_period ? apu.square2.envelope_period : 8;
 	apu.square2.volume = apu.square2.envelope_volume;
 	if (apu.square2.length_timer == 0) apu.square2.length_timer = 64;
 }
@@ -380,7 +350,6 @@ void noise_trigger()
 {
 	apu.noise.enable = apu.noise.dac_enable;
 	apu.noise.frequency_timer = divisor[apu.noise.divisor] << apu.noise.frequency;
-	apu.noise.envelope_period_timer = apu.noise.envelope_period ? apu.noise.envelope_period : 8;
 	apu.noise.volume = apu.noise.envelope_volume;
 	if (apu.noise.length_timer == 0) apu.noise.length_timer = 64;
 	apu.noise.lfsr = 0x7FFF;
@@ -388,6 +357,13 @@ void noise_trigger()
 
 void sequencer_run()
 {
+	if (!apu.sequencer.enable)
+	{
+		apu.sequencer.left_sample = 0;
+		apu.sequencer.right_sample = 0;
+		return;
+	}
+
 	s16 sample = 0;
 
 	if (apu.square1.enable_left) sample += apu.square1.output;

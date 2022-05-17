@@ -75,8 +75,12 @@ void gb_init(char* rom_path, bool bootrom)
 	}
 
 	gb.cycles = 0;
-	gb.ppu_cycles = 0;
-	gb.ppu_next_mode = 2;
+	ppu.cycles = 0;
+	ppu.next_mode = 2;
+
+	cpu.wram_bank = 1;
+
+	gb.cbg_mode = cart.cgb_flag;
 
 	// ppu
 	ppu.oam_buffer_size = 0;

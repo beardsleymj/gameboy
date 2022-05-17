@@ -23,7 +23,7 @@ typedef struct
 	u8 envelope_volume;
     bool envelope_direction;
     u8 envelope_period;
-    u8 envelope_period_timer;
+    u8 envelope_timer;
     u16 frequency;
     bool counter;
     u16 frequency_timer;
@@ -53,7 +53,7 @@ typedef struct
     u8 envelope_volume;
     bool envelope_direction;
     u8 envelope_period;
-    u8 envelope_period_timer;
+    u8 envelope_timer;
     u16 frequency;
     bool counter;
     u16 frequency_timer;
@@ -94,7 +94,7 @@ typedef struct
 	u8 envelope_volume;
     bool envelope_direction;
     u8 envelope_period;
-    u8 envelope_period_timer;
+    u8 envelope_timer;
     u16 frequency;
     u16 frequency_timer;
     u8 divisor;
@@ -156,7 +156,7 @@ void square2_length();
 void wave_length();
 void noise_length();
 void square1_sweep();
-u8 calculate_new_frequency();
+u16 calculate_new_frequency();
 void square1_envelope();
 void square2_envelope();
 void noise_envelope();

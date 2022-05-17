@@ -5,11 +5,22 @@
 
 ppu_t ppu;
 
+u8 ppu_read_byte(u16 address)
+{
+	return ppu.vram[address & 0x1FFF + (0x2000 * ppu.vram_bank)];
+}
+
+void ppu_write_byte(u16 address, u8 value)
+{
+	ppu.vram[address & 0x1FFF + (0x2000 * ppu.vram_bank)] = value;
+}
+
+
 void ppu_run() 
 {	
-	if (gb.ppu_cycles <= gb.cycles)	
+	while (ppu.cycles <= gb.cycles)	
 	{
-		switch (gb.ppu_next_mode) 
+		switch (ppu.next_mode) 
 		{
 			case 0:	hblank(); break;
 			case 1:	vblank(); break;
@@ -24,12 +35,12 @@ void hblank()
 {
 	ppu.stat.mode_flag = 0;
 	if (ppu.ly == 143)
-		gb.ppu_next_mode = 1;
+		ppu.next_mode = 1;
 	else 
-		gb.ppu_next_mode = 2;
+		ppu.next_mode = 2;
 	if (ppu.stat.hblank_int_enable)
 		cpu.interrupt_flag.stat = 1;
-	gb.ppu_cycles += 204;
+	ppu.cycles += 204;
 	increment_ly();
 }
 
@@ -50,21 +61,21 @@ void vblank()
 		increment_ly();
 		if (ppu.ly == 154) 
 		{
-			gb.ppu_next_mode = 2;
+			ppu.next_mode = 2;
 			ppu.vblanks = 0;
 		}
 	}
-	gb.ppu_cycles += 456;
+	ppu.cycles += 456;
 }
 
 // Mode 2
 void oam_search() 
 {
 	ppu.stat.mode_flag = 2;
-	gb.ppu_next_mode = 3;
+	ppu.next_mode = 3;
 	if (ppu.stat.oam_int_enable)
 		cpu.interrupt_flag.stat = 1;
-	gb.ppu_cycles += 80;
+	ppu.cycles += 80;
 
 	if (ppu.ly > 143) 
 	{
@@ -78,7 +89,7 @@ void oam_search()
 	ppu.oam_buffer_size = 0;
 	for (u16 loc = 0; loc < 0xA0; loc += 4)	
 	{
-		sprite* current_sprite = (sprite*)&gb.oam[loc];
+		sprite* current_sprite = (sprite*)&ppu.oam[loc];
 		u8 sprite_height = 8 + (ppu.lcdc.obj_size * 8); // lcdc bit 2 for sprite height 0 = 8px, 1 = 16px
 		if ((ppu.ly + 16 >= current_sprite->y_pos) && (ppu.ly + 16 < current_sprite->y_pos + sprite_height)) 
 		{
@@ -96,8 +107,8 @@ void oam_search()
  void draw_scanline() 
 {
 	 ppu.stat.mode_flag = 3;
-	 gb.ppu_next_mode = 0;
-	 gb.ppu_cycles += 172;
+	 ppu.next_mode = 0;
+	 ppu.cycles += 172;
 
 	 u8 scanline[160] = { 0 };
 
@@ -314,8 +325,9 @@ void dma_transfer()
 
 	for (u8 i = 0; i < 0xA0; i++)
 	{
-		gb.oam[i] = read_byte(address + i);
+		ppu.oam[i] = read_byte(address + i);
 	}
 
 	gb.cycles -= 4 * 0xA0;
 }
+

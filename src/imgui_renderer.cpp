@@ -195,6 +195,7 @@ void draw_system()
 	ImGui::Begin("System", &show_system);
 	ImGui::Text("Title: %s", cart.title);
 	ImGui::Text("Cart Type: MBC%i", cart.cart_type);
+	ImGui::Text("CGB Flag: %i", cart.cgb_flag);
 	ImGui::Text("Frame Rate: %.2f", ImGui::GetIO().Framerate);
 	ImGui::End();
 }
@@ -233,7 +234,7 @@ void draw_memory_editor()
 			size = cart.ram_size;
 			break;
 		case 2:
-			data = gb.wram;
+			data = cpu.wram;
 			size = 0x2000;
 			break;
 		case 3:

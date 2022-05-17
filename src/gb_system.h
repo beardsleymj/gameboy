@@ -27,27 +27,21 @@ typedef union joypad
 
 typedef struct gameboy 
 {
-	bool cbg;
+	bool cbg_mode;
 	bool IME;
 	u8 ime_delay;
 	bool halt;
 	bool stop;
 	u8 bootrom[0x100];
 	u8 bootrom_disabled;
-	u8 wram[0x2000];	
-	u8 oam[0xA0];
-	u8 hram[0x7F];
 
-	// I/O RANGES
+	// I/O
 	joypad_t joyp;
 	u8 sb; // Serial transfer data (R/W)
 	u8 sc; // Serial transfer control (R/W)
 
-
 	// timing
 	uint64_t cycles;
-	uint64_t ppu_cycles;
-	uint64_t ppu_next_mode;
 	uint64_t last_sync_cycle;
 	uint64_t last_div_cycle;
 	uint64_t last_tima_cycle;

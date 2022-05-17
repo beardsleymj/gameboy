@@ -665,3 +665,43 @@ void prefix_cb()
 			exit(0);
 	}
 }
+
+u8 cpu_read_wram_byte(u16 address)
+{
+	if (address >= 0xC000 && address <= 0xCFFF)
+	{
+		return cpu.wram[address - 0xC000];
+	}
+	else if (gb.cbg_mode == 0 && address >= 0xD000 && address <= 0xDFFF)
+	{
+		return cpu.wram[address - 0xC000];
+	}
+	else if (gb.cbg_mode == 1 && address >= 0xD000 && address <= 0xDFFF)
+	{
+		return cpu.wram[address - 0xB000 + (cpu.wram_bank * 0x1000)];
+	}
+	else if (address >= 0xE000 && address <= 0xFDFF)
+	{
+		return cpu.wram[address - 0xE000];
+	}
+}
+
+void cpu_write_wram_byte(u16 address, u8 value)
+{
+	if (address >= 0xC000 && address <= 0xCFFF)
+	{
+		cpu.wram[address - 0xC000] = value;
+	}
+	else if (gb.cbg_mode == 0 && address >= 0xD000 && address <= 0xDFFF)
+	{
+		cpu.wram[address - 0xC000] = value;
+	}
+	else if (gb.cbg_mode == 1 && address >= 0xD000 && address <= 0xDFFF)
+	{	// maybe combine with previous
+		cpu.wram[address - 0xB000 + (cpu.wram_bank * 0x1000)] = value;
+	}
+	else if (address >= 0xE000 && address <= 0xFDFF)
+	{
+		cpu.wram[address - 0xE000] = value;
+	}
+}

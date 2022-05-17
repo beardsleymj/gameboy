@@ -62,8 +62,10 @@ typedef union stat
 
 typedef struct
 {
-	// ppu
-	u8 vram[0x2000];	// 8000 - 9FFF
+	uint64_t cycles;
+	uint64_t next_mode;
+	u8 vram[0x4000];
+	u8 oam[0xA0];
 	sprite oam_buffer[40];
 	u8 oam_buffer_size;
 	u8 window_internal_line_counter;
@@ -83,10 +85,24 @@ typedef struct
 	u8 bgp;
 	u8 obp0;
 	u8 obp1;
+	u8 background_palette_index_audio_increment;
+	u8 background_palette_index;	
+	//u16 bgp[32];
+	//u16 obp[32];
+	u16 hdma1_2;
+	u16 hdma3_4;
+	u8 transfer_length;
+	u8 transfer_mode;
+	bool hdma_transfer_is_active;
+	bool obj_prio_mode;
+	bool vram_bank;
+
 } ppu_t ;
 
 extern ppu_t ppu;
 
+u8 ppu_read_byte(u16 address);
+void ppu_write_byte(u16 address, u8 value);
 void ppu_run();
 void hblank();
 void vblank();
@@ -97,7 +113,6 @@ void increment_ly();
 void draw_bg(u8* scanline);
 void draw_obj(u8* scanline);
 void fill_buffer(u8* scanline);
-u8 get_obj_pixel_color(sprite sprt);
 
 #ifdef __cplusplus
 }

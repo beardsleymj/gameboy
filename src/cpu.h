@@ -77,6 +77,12 @@ typedef union tac
 
 typedef struct 
 {
+	u8 wram[0x8000];
+	u8 wram_bank;
+	u8 hram[0x7F];
+	
+	bool double_speed;
+	bool prepare_speed_switch;
 	registers r;
 	u16 SP;
 	u16 PC;
@@ -94,6 +100,8 @@ void cpu_run();
 void handle_interrupts();
 void execute_instruction();
 void prefix_cb();
+u8 cpu_read_wram_byte(u16 address);
+void cpu_write_wram_byte(u16 address, u8 value);
 
 #ifdef __cplusplus
 }

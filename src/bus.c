@@ -12,14 +12,12 @@ u8 read_byte(u16 address)
 
 	if (gb.bootrom_disabled == 0 && address < 0x100) return gb.bootrom[address];
 	if (address >= 0x0000 && address <= 0x7FFF)	return cart_read_byte(address);
-	if (address >= 0x8000 && address <= 0x9FFF)	return ppu.vram[address & 0x1FFF];
+	if (address >= 0x8000 && address <= 0x9FFF)	return ppu_read_byte(address);
 	if (address >= 0xA000 && address <= 0xBFFF)	return cart_read_byte(address);
-	if (address >= 0xC000 && address <= 0xCFFF)	return gb.wram[address & 0x1FFF];
-	if (address >= 0xD000 && address <= 0xDFFF)	return gb.wram[address & 0x1FFF];
-	if (address >= 0xE000 && address <= 0xFDFF)	return gb.wram[address & 0x1FFF];
-	if (address >= 0xFE00 && address <= 0xFE9F)	return gb.oam[address & 0xFF];
+	if (address >= 0xC000 && address <= 0xFDFF)	return cpu_read_wram_byte(address);
+	if (address >= 0xFE00 && address <= 0xFE9F)	return ppu.oam[address & 0xFF];
 	if (address >= 0xFF00 && address <= 0xFF7F)	return read_io(address);
-	if (address >= 0xFF80 && address <= 0xFFFE)	return gb.hram[address & 0x7F];
+	if (address >= 0xFF80 && address <= 0xFFFE)	return cpu.hram[address & 0x7F];
 	if (address == INTERRUPT_ENABLE)			return cpu.interrupt_enable.raw;
 	if (address == 0xFF7F)						return 0xFF; // UNUSED Memory Mapped IO returns OxFF, add more
 	printf("Unimplemented Read Address: %X\n", address);
@@ -236,13 +234,34 @@ u8 read_io(u16 address)
 			return ppu.ly;
 			break;
 
+		case 0xFF68:
+			return 0xFF;
+			break;
+		
 		case 0xFF4D:
-			return 0xFF; // color gb only
+			return cpu.double_speed << 7 | 0b01111110 | cpu.prepare_speed_switch;
+			break;
+
+		case 0xFF4F:
+			return ppu.vram_bank;
+			break;
+
+		case 0xFF55:
+			return ppu.transfer_length | ppu.hdma_transfer_is_active << 7;
+			break;
+
+		case 0xFF6C:
+			return ppu.obj_prio_mode;
+			break;
+
+		case 0xFF70:
+			return cpu.wram_bank;
 			break;
 
 		default:
 			if (address >= 0xFEA0 && address <= 0xFEFF)
 				return 0xFF; // prohibited
+			return 0xFF;
 			break;
 	}
 }
@@ -251,18 +270,15 @@ void write_byte(u16 address, u8 value)
 {
 	gb.cycles += 4;
 
-	if (address <= 0x7FFF)								cart_write_byte(address, value);
-	else if (address >= 0x8000 && address <= 0x9FFF)	ppu.vram[address - 0x8000] = value;
+	if		(address <= 0x7FFF)							cart_write_byte(address, value);
+	else if (address >= 0x8000 && address <= 0x9FFF)	ppu_write_byte(address, value);
 	else if (address >= 0xA000 && address <= 0xBFFF)	cart_write_byte(address, value);
-	else if (address >= 0xC000 && address <= 0xCFFF)	gb.wram[address - 0xC000] = value;
-	else if (address >= 0xD000 && address <= 0xDFFF)	gb.wram[address - 0xC000] = value;
-	else if (address >= 0xE000 && address <= 0xFDFF)	gb.wram[address - 0xE000] = value;
-	else if (address >= 0xFE00 && address <= 0xFE9F)	gb.oam[address - 0xFE00] = value;
+	else if (address >= 0xC000 && address <= 0xFDFF)	cpu_write_wram_byte(address, value);
+	else if (address >= 0xFE00 && address <= 0xFE9F)	ppu.oam[address - 0xFE00] = value;
 	else if (address >= 0xFEA0 && address <= 0xFEFF)	printf("write: illegal write to prohibited area: %x\n", address);
 	else if (address >= 0xFF00 && address <= 0xFF7F)	write_io(address, value);
-	else if (address >= 0xFF80 && address <= 0xFFFE)	gb.hram[address - 0xFF80] = value;
+	else if (address >= 0xFF80 && address <= 0xFFFE)	cpu.hram[address - 0xFF80] = value;
 	else if (address == INTERRUPT_ENABLE)				cpu.interrupt_enable.raw = value;
-	else if (address >= 0xE000 && address <= 0xFDFF)	printf("Illegal write to echo ram: %x\n", address);
 	else
 		printf("Unimplemented Write Address: %X\n", address);
 }
@@ -286,7 +302,7 @@ void write_io(u16 address, u8 value)
 			apu.square1.dac_enable = (value & 0b11111000) != 0; // clear top 5 bits enable dac
 			if (!apu.square1.dac_enable) apu.square1.enable = false;
 			apu.square1.envelope_period = (value >> 0) & 0b111;
-			apu.square1.envelope_period = (value >> 3) & 1;
+			apu.square1.envelope_direction = (value >> 3) & 1;
 			apu.square1.envelope_volume = (value >> 4) & 0b1111;
 			break;
 
@@ -383,19 +399,19 @@ void write_io(u16 address, u8 value)
 		case NR50:
 			apu.sequencer.right_volume = (value >> 0) & 0b111;
 			apu.sequencer.right_enable = (value >> 3) & 1;
-			apu.sequencer.left_volume = (value >> 4) & 0b111;
-			apu.sequencer.left_enable = (value >> 7) & 1;
+			apu.sequencer.left_volume  = (value >> 4) & 0b111;
+			apu.sequencer.left_enable  = (value >> 7) & 1;
 			break;
 
 		case NR51:
 			apu.square1.enable_right = (value >> 0) & 1;
 			apu.square2.enable_right = (value >> 1) & 1;
-			apu.wave.enable_right = (value >> 2) & 1;
-			apu.noise.enable_right = (value >> 3) & 1;
-			apu.square1.enable_left = (value >> 4) & 1;
-			apu.square2.enable_left = (value >> 5) & 1;
-			apu.wave.enable_left = (value >> 6) & 1;
-			apu.noise.enable_left   = (value >> 7) & 1;
+			apu.wave.enable_right	 = (value >> 2) & 1;
+			apu.noise.enable_right	 = (value >> 3) & 1;
+			apu.square1.enable_left  = (value >> 4) & 1;
+			apu.square2.enable_left	 = (value >> 5) & 1;
+			apu.wave.enable_left	 = (value >> 6) & 1;
+			apu.noise.enable_left	 = (value >> 7) & 1;
 			break;
 
 		case NR52:
@@ -491,7 +507,44 @@ void write_io(u16 address, u8 value)
 		case LY: // read only
 			break;
 
-		case 0xFF4D: // color gb only
+		case 0xFF4D:
+			cpu.prepare_speed_switch = value & 1;
+			break;
+
+		case 0xFF4F:
+			ppu.vram_bank = value & 1;
+			break;
+
+		case 0xFF51:
+			ppu.hdma1_2 = (value << 8) | (ppu.hdma1_2 & 0xFF);
+			break;
+
+		case 0xFF52: // lower 4 bits of address are ignored
+			ppu.hdma1_2 = (ppu.hdma1_2 & 0xFF00) | (value & 0xF0);
+			break;
+
+		case 0xFF53:
+			ppu.hdma3_4 = (value << 8) | (ppu.hdma3_4 & 0xFF);
+			break;
+
+		case 0xFF54: // lower 4 bits of address are ignored
+			ppu.hdma3_4 = (ppu.hdma3_4 & 0xFF00) | (value & 0xF0);
+			break;
+
+		case 0xFF55:
+			ppu.transfer_length = value & 0x7F;
+			ppu.transfer_mode = value >> 7;
+			break;
+
+		case 0xFF6C:
+			ppu.obj_prio_mode = value & 1;
+			break;
+
+		case 0xFF70:
+			if (gb.cbg_mode = true)
+				cpu.wram_bank = value == 0 ? 1 : value & 0x07;
+			else
+				cpu.wram_bank = 1;
 			break;
 
 		default:
