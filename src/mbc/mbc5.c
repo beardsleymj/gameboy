@@ -30,7 +30,7 @@ void mbc5_write(u16 address, u8 value)
 	}
 
 	if (address >= 0x2000 && address <= 0x2FFF)
-	{	// Low bit of ROM Bank Number
+	{	// Low byte of ROM Bank Number
 		cart.bank1_reg = value;
 		return;
 	}
