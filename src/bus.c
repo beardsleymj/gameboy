@@ -452,6 +452,11 @@ void write_io(u16 address, u8 value)
 
 		case LCDC:
 			ppu.lcdc.raw = value;
+			if (ppu.lcdc.lcd_enable == 0)
+			{
+				ppu.stat.mode_flag = 0;
+				ppu.ly = 0;
+			}
 			break;
 
 		case STAT:

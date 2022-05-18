@@ -119,14 +119,10 @@ void oam_search()
 
 	 u8 scanline[160] = { 0 };
 
-	 if (ppu.lcdc.lcd_enable)
-	 {
-		 if (ppu.lcdc.bg_win_enable)
-			 draw_bg(scanline);
-
-		 if (ppu.lcdc.obj_enable)
-			 draw_obj(scanline);
-	 }
+	 if (ppu.lcdc.bg_win_enable)
+		 draw_bg(scanline);
+	 if (ppu.lcdc.obj_enable)
+		 draw_obj(scanline);
 
 	 fill_buffer(scanline);
 }
