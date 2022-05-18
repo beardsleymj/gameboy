@@ -35,7 +35,7 @@ typedef union registers
 	};
 } registers;
 
-typedef union interrupt_enable
+typedef union 
 {
 	u8		raw		: 5;
 	struct
@@ -47,9 +47,9 @@ typedef union interrupt_enable
 			serial	: 1,
 			joypad	: 1;
 	};
-} interrupt_enable; // interrupt enable
+} interrupt_enable_t; // interrupt enable
 
-typedef union interrupt_flag
+typedef union 
 {
 	u8		raw		: 5;
 	struct
@@ -62,7 +62,7 @@ typedef union interrupt_flag
 			joypad	: 1;
 	};
 
-} interrupt_flag; // interrupt flag
+} interrupt_flag_t; // interrupt flag
 
 typedef union tac
 {
@@ -86,8 +86,8 @@ typedef struct
 	registers r;
 	u16 SP;
 	u16 PC;
-	interrupt_enable interrupt_enable;
-	interrupt_flag interrupt_flag;
+	interrupt_enable_t interrupt_enable;
+	interrupt_flag_t interrupt_flag;
 	u8 div;
 	u8 tima;
 	u8 tma;

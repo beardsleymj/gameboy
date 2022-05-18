@@ -5,10 +5,18 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef enum banking_modes { simple, advanced } banking_modes;
-
-typedef struct cartridge
+	
+typedef struct
+{
+	u8 seconds;
+	u8 minutes;
+	u8 hours;
+	u16 day;
+	bool halt;
+	bool day_carry_bit;
+} rtc_t;
+	
+typedef struct 
 {
 	char title[16];
 	bool cgb_flag;
@@ -31,7 +39,9 @@ typedef struct cartridge
 
 	u16 rom_address_pins_mask;
 	bool ram_bank_enable;
-	banking_modes banking_mode;
+	u8 banking_mode;
+
+	rtc_t rtc;
 } cartridge_t;
 
 extern cartridge_t cart;
@@ -40,6 +50,7 @@ void cart_load(char* rom_path);
 u8 cart_read_byte(u16 address);
 void cart_write_byte(u16 address, u8 value);
 void cart_write_save();
+void rtc_update();
 
 #ifdef __cplusplus
 }

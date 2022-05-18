@@ -9,7 +9,7 @@ u8 mbc1_read(u16 address)
 
 	if (address >= 0x4000 && address <= 0x7FFF)
 	{
-		u16 bank = ((cart.bank2_reg << 5) | (cart.bank1_reg)) & cart.rom_address_pins_mask;
+		u16 bank = (cart.bank1_reg) & cart.rom_address_pins_mask;
 		return cart.rom[(bank << 14) | (address & 0x3FFF)];
 	}
 	
@@ -17,9 +17,9 @@ u8 mbc1_read(u16 address)
 	{
 		if (cart.ram_bank_enable == true)
 		{		
-			if (cart.banking_mode == simple || cart.ram_banks == 1)
+			if (cart.banking_mode == 0 || cart.ram_banks == 1)
 				return cart.sram[address & 0x1FFF];
-			else if (cart.banking_mode == advanced)
+			else if (cart.banking_mode == 1)
 			{
 				if (cart.bank2_reg < cart.ram_banks)
 					return cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)];
@@ -60,9 +60,9 @@ void mbc1_write(u16 address, u8 value)
 	
 	if (address >= 0xA000 && address <= 0xBFFF && cart.ram_bank_enable == true)
 	{	
-		if (cart.banking_mode == simple || cart.ram_banks == 1)
+		if (cart.banking_mode == 0 || cart.ram_banks == 1)
 			cart.sram[address & 0x1FFF] = value;
-		else if (cart.banking_mode == advanced)
+		else if (cart.banking_mode == 1)
 		{
 			if (cart.bank2_reg < cart.ram_banks)
 				cart.sram[(cart.bank2_reg << 13) | (address & 0x1FFF)] = value;

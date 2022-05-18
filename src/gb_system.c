@@ -38,27 +38,28 @@ void gb_init(char* rom_path, bool bootrom)
 		cpu.r.DE = 0x00D8;
 		cpu.r.HL = 0x014D;
 
-		write_io(NR10, 0x80);
-		write_io(NR11, 0xBF);
-		write_io(NR12, 0xF3);
-		write_io(NR13, 0xFF);
-		write_io(NR14, 0xBF);
-		write_io(NR21, 0x3F);
-		write_io(NR22, 0xFF);
-		write_io(NR23, 0xFF);
-		write_io(NR24, 0xBF);
-		write_io(NR30, 0x7F);
-		write_io(NR31, 0xFF);
-		write_io(NR32, 0x9F);
-		write_io(NR33, 0xFF);
-		write_io(NR34, 0xBF);
-		write_io(NR41, 0xFF);
-		write_io(NR42, 0x00);
-		write_io(NR43, 0x00);
-		write_io(NR44, 0xBF);
-		write_io(NR50, 0xFF);
-		write_io(NR51, 0xF3);
-		write_io(NR52, 0xF1);
+		// Causes horrible screeching noise
+		//write_io(NR10, 0x80);
+		//write_io(NR11, 0xBF);
+		//write_io(NR12, 0xF3);
+		//write_io(NR13, 0xFF);
+		//write_io(NR14, 0xBF);
+		//write_io(NR21, 0x3F);
+		//write_io(NR22, 0xFF);
+		//write_io(NR23, 0xFF);
+		//write_io(NR24, 0xBF);
+		//write_io(NR30, 0x7F);
+		//write_io(NR31, 0xFF);
+		//write_io(NR32, 0x9F);
+		//write_io(NR33, 0xFF);
+		//write_io(NR34, 0xBF);
+		//write_io(NR41, 0xFF);
+		//write_io(NR42, 0x00);
+		//write_io(NR43, 0x00);
+		//write_io(NR44, 0xBF);
+		//write_io(NR50, 0xFF);
+		//write_io(NR51, 0xF3);
+		//write_io(NR52, 0xF1);
 
 		ppu.lcdc.raw = 0x91;
 		ppu.scy = 0x00;
@@ -71,6 +72,7 @@ void gb_init(char* rom_path, bool bootrom)
 		ppu.obp1 = 0xFF;
 		ppu.wx = 0x00;
 		ppu.wy = 0x00;
+		
 		cpu.interrupt_enable.raw = 0x00;
 	}
 

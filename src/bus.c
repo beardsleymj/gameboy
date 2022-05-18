@@ -415,12 +415,7 @@ void write_io(u16 address, u8 value)
 			break;
 
 		case NR52:
-			if (apu.sequencer.enable != (value >> 7) & 1)
-			{
-				apu.sequencer.enable = (value >> 7) & 1;
-
-				// add code here to reset the channels / sequencer
-			}
+			apu.sequencer.enable = (value >> 7) & 1;
 			break;
 
 		case JOYP:
@@ -535,6 +530,10 @@ void write_io(u16 address, u8 value)
 			ppu.transfer_length = value & 0x7F;
 			ppu.transfer_mode = value >> 7;
 			break;
+
+		case 0xFF56: // IR PORT
+			return 0xFF;
+			break;			
 
 		case 0xFF6C:
 			ppu.obj_prio_mode = value & 1;

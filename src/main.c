@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 	{
 		if (debug)
 		{
-			print_status(&log_file);
+			print_status(log_file);
 		}
 
 		cpu_run();
