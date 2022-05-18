@@ -24,14 +24,12 @@ typedef struct
 
 	u32 rom_size;
 	u8* rom;
-	u8* rom_ptr; // ptr for the switchable bank
 
-	u8 bank1_reg;
-	u8 bank2_reg;
+	u8 rom_bank;
+	u8 ram_bank;
 
 	u32 ram_size;
 	u8 ram_banks;
-	u8* ram_ptr; // for "faster reads
 	u8* sram;
 	u8* ram_bank_ptr;
 

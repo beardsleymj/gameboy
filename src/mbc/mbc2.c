@@ -9,7 +9,7 @@ u8 mbc2_read(u16 address)
 
 	if (address >= 0x4000 && address <= 0x7FFF)
 	{
-		u16 bank = cart.bank1_reg & cart.rom_address_pins_mask;
+		u16 bank = cart.rom_bank & cart.rom_address_pins_mask;
 		return cart.rom[(bank << 14) | (address & 0x3FFF)];
 	}
 
@@ -39,9 +39,9 @@ void mbc2_write(u16 address, u8 value)
 	{	// bank 1 register
 		if ((value & 0x100) == 0)
 		{
-			cart.bank1_reg = (value & 0xF);
-			if (cart.bank1_reg == 0)
-				cart.bank1_reg = 1;
+			cart.rom_bank = (value & 0xF);
+			if (cart.rom_bank == 0)
+				cart.rom_bank = 1;
 		}
 		return;
 	}

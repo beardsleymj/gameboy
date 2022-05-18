@@ -9,7 +9,7 @@ u8 mbc5_read(u16 address)
 	
 	if (address >= 0x4000 && address <= 0x7FFF)
 	{
-		u16 bank = ((cart.bank2_reg << 8) | (cart.bank1_reg)) & cart.rom_address_pins_mask;
+		u16 bank = ((cart.ram_bank << 8) | cart.rom_bank) & cart.rom_address_pins_mask;
 		return cart.rom[(bank << 14) | (address & 0x3FFF)];
 	}
 	
@@ -31,13 +31,13 @@ void mbc5_write(u16 address, u8 value)
 
 	if (address >= 0x2000 && address <= 0x2FFF)
 	{	// Low byte of ROM Bank Number
-		cart.bank1_reg = value;
+		cart.rom_bank = value;
 		return;
 	}
 	
 	if (address >= 0x3000 && address <= 0x3FFF)
 	{	// High bit of ROM Bank Number
-		cart.bank2_reg = value & 0x01;
+		cart.ram_bank = value & 0x01;
 		return;
 	}
 	

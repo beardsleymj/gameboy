@@ -77,6 +77,7 @@ void cart_load(char* rom_path)
 		case 5: cart.ram_banks = 8; break;
 		default: exit(-3);
 	}
+	
 	cart.ram_size = cart.ram_banks * RAM_BANK_SIZE;
 	cart.sram = calloc(1, cart.ram_size);
 
@@ -103,8 +104,8 @@ void cart_load(char* rom_path)
 	cart.cgb_flag = (cart.rom[0x143] == 0x80) || (cart.rom[0x143] == 0xC0);
 
 	cart.ram_bank_enable = 0;
-	cart.bank1_reg = 1;
-	cart.bank2_reg = 0;
+	cart.rom_bank = 1;
+	cart.ram_bank = 0;
 	cart.banking_mode = 0;
 
 	fclose(rom_file);
