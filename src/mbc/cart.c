@@ -32,7 +32,10 @@ void cart_load(char* rom_path)
 		case 6: cart.rom_size = 128 * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x7F; break;
 		case 7: cart.rom_size = 256 * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0xFF; break;
 		case 8: cart.rom_size = 512 * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x1FF; break;
-		default: exit(-3);
+		default: 
+			printf("Invalid ROM size code: %d\n", code);
+			exit(-1);
+			break;
 	}
 
 	cart.rom = malloc((size_t)cart.rom_size);

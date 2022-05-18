@@ -51,6 +51,7 @@ void apu_run()
 				wave_length();
 				noise_length();
 				break;
+				
 			case 1:
 				break;
 
