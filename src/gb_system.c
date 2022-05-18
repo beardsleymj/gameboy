@@ -109,7 +109,6 @@ void gb_init(char* rom_path, bool bootrom)
 int load_bootrom()
 {
 	FILE* bootrom = NULL;
-	//bootrom = fopen("bootrom\\bootix_dmg.bin", "rb");
 	bootrom = fopen("bootrom\\dmg01.gb", "rb");
 	if (bootrom == NULL)
 	{

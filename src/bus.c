@@ -546,7 +546,7 @@ void write_io(u16 address, u8 value)
 
 		case 0xFF70:
 			if (gb.cbg_mode = true)
-				cpu.wram_bank = value == 0 ? 1 : value & 0x07;
+				cpu.wram_bank = value & 0x07 ? value & 0x07 : 1;
 			else
 				cpu.wram_bank = 1;
 			break;
