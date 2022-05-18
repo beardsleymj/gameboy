@@ -18,6 +18,12 @@ void ppu_write_byte(u16 address, u8 value)
 
 void ppu_run() 
 {	
+	if (!ppu.lcdc.lcd_enable)
+	{
+		ppu.cycles = gb.cycles;
+		return;
+	}
+	
 	while (ppu.cycles <= gb.cycles)	
 	{
 		switch (ppu.next_mode) 
@@ -49,6 +55,7 @@ void vblank()
 {
 	if (ppu.vblanks == 0) 
 	{
+		ppu.wy_ly_flag = 0;
 		ppu.draw_frame = 1;
 		ppu.stat.mode_flag = 1;
 		if (ppu.stat.vblank_int_enable)
@@ -138,12 +145,16 @@ void draw_bg(u8* scanline)
 
 	ppu.window_draw_flag = 0;
 
+	// One of the conditions to draw the window is for ly to have been equal to wy at some point
+	if (ppu.wy == ppu.ly)
+		ppu.wy_ly_flag = 1;
+
 	for (u8 i = 0; i < 160; i++)
 	{
 
 		u8 tile_number;
 		// determines whether to use the bg / window tilemap and gets the tile number
-		if (i + 7 >= ppu.wx && ppu.ly >= ppu.wy && ppu.lcdc.win_enable)
+		if (i + 7 >= ppu.wx && ppu.wy_ly_flag && ppu.lcdc.win_enable)
 		{
 			if (ppu.window_draw_flag == 0)
 			{

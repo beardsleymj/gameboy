@@ -68,7 +68,8 @@ typedef struct
 	u8 oam[0xA0];
 	sprite oam_buffer[40];
 	u8 oam_buffer_size;
-	u8 window_internal_line_counter;
+	bool wy_ly_flag;
+	s16 window_internal_line_counter;
 	u8 window_draw_flag;
 	u8 vblanks;
 	bool draw_frame;
