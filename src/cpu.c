@@ -355,7 +355,7 @@ void execute_instruction()
 		case 0x3F: ccf(); break;
 		case 0x37: scf(); break;
 		case 0x00: break; // noop
-		case 0x10: printf("stop \n");  break; // STOP: TODO
+		case 0x10: stop();  break; // STOP: TODO
 		case 0x76: halt(); break;
 		case 0xF3: di(); break;
 		case 0xFB: ei(); break;

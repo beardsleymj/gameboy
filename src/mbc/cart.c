@@ -11,7 +11,7 @@ cartridge_t cart;
 void cart_load(char* rom_path)
 {
 	FILE* rom_file = fopen(rom_path, "rb");
-	if (rom_file == NULL)
+	if (!rom_file)
 	{
 		printf("Error opening ROM");
 		exit(-1);

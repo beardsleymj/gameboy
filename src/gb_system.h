@@ -27,7 +27,7 @@ typedef union joypad
 
 typedef struct gameboy 
 {
-	bool cbg_mode;
+	bool cgb_mode;
 	bool IME;
 	u8 ime_delay;
 	bool halt;

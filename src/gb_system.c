@@ -33,33 +33,12 @@ void gb_init(char* rom_path, bool bootrom)
 		gb.bootrom_disabled = 1;
 		cpu.PC = 0x100;
 		cpu.SP = 0xFFFE;
-		cpu.r.AF = 0x01B0;
-		cpu.r.BC = 0x0013;
-		cpu.r.DE = 0x00D8;
-		cpu.r.HL = 0x014D;
 
-		// Causes horrible screeching noise
-		//write_io(NR10, 0x80);
-		//write_io(NR11, 0xBF);
-		//write_io(NR12, 0xF3);
-		//write_io(NR13, 0xFF);
-		//write_io(NR14, 0xBF);
-		//write_io(NR21, 0x3F);
-		//write_io(NR22, 0xFF);
-		//write_io(NR23, 0xFF);
-		//write_io(NR24, 0xBF);
-		//write_io(NR30, 0x7F);
-		//write_io(NR31, 0xFF);
-		//write_io(NR32, 0x9F);
-		//write_io(NR33, 0xFF);
-		//write_io(NR34, 0xBF);
-		//write_io(NR41, 0xFF);
-		//write_io(NR42, 0x00);
-		//write_io(NR43, 0x00);
-		//write_io(NR44, 0xBF);
-		//write_io(NR50, 0xFF);
-		//write_io(NR51, 0xF3);
-		//write_io(NR52, 0xF1);
+		// CGB Initial Registers
+		cpu.r.AF = 0x1180;
+		cpu.r.BC = 0x0000;
+		cpu.r.DE = 0x0008;
+		cpu.r.HL = 0x007C;
 
 		ppu.lcdc.raw = 0x91;
 		ppu.scy = 0x00;
@@ -82,15 +61,29 @@ void gb_init(char* rom_path, bool bootrom)
 
 	cpu.wram_bank = 1;
 
-	gb.cbg_mode = cart.cgb_flag;
+	gb.cgb_mode = cart.cgb_flag;
 
 	// ppu
 	ppu.oam_buffer_size = 0;
 	ppu.window_internal_line_counter = 0;
 	ppu.window_draw_flag = 0;
-	ppu.vblanks = 0;
 	ppu.draw_frame = 0;
+	ppu.dmg_colors[0].r = 0xFF;
+	ppu.dmg_colors[0].g = 0xFF;
+	ppu.dmg_colors[0].b = 0xFF;
+	ppu.dmg_colors[1].r = 0xAA;
+	ppu.dmg_colors[1].g = 0xAA;
+	ppu.dmg_colors[1].b = 0xAA;
+	ppu.dmg_colors[2].r = 0x55;
+	ppu.dmg_colors[2].g = 0x55;
+	ppu.dmg_colors[2].b = 0x55;
+	ppu.dmg_colors[3].r = 0x00;
+	ppu.dmg_colors[3].g = 0x00;
+	ppu.dmg_colors[3].b = 0x00;
+	
 
+
+	
 	// apu
 	apu_init();
 

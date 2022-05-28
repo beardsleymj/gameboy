@@ -25,7 +25,7 @@ void renderer_init()
 
     SDL_Init(SDL_INIT_VIDEO);
 
-    window = SDL_CreateWindow("Game Boy", 0, SDL_WINDOWPOS_CENTERED, 160 * scale, 144 * scale, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("Game Boy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 160 * scale, 144 * scale, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, context);
     SDL_GL_SetSwapInterval(0);

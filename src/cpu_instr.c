@@ -334,6 +334,13 @@ void halt()
 
 void stop()
 {
+	printf("stop \n");
+	if (cpu.prepare_speed_switch)
+	{
+		printf("double speed switch\n");
+		cpu.prepare_speed_switch = 0;
+		cpu.double_speed = 1;
+	}
 	gb.stop = 1;
 }
 

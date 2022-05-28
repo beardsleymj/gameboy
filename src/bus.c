@@ -210,15 +210,15 @@ u8 read_io(u16 address)
 			return ppu.dma;
 			break;
 
-		case BGP:
+		case BGP: // non cgb mode only
 			return ppu.bgp;
 			break;
 
-		case OBP0:
+		case OBP0: // non cgb mode only
 			return ppu.obp0;
 			break;
 
-		case OBP1:
+		case OBP1: // non cgb mode only
 			return ppu.obp1;
 			break;
 
@@ -233,25 +233,43 @@ u8 read_io(u16 address)
 		case LY:
 			return ppu.ly;
 			break;
-
-		case 0xFF68:
-			return 0xFF;
-			break;
 		
 		case 0xFF4D:
-			return cpu.double_speed << 7 | 0b01111110 | cpu.prepare_speed_switch;
+			return (cpu.double_speed << 7) | 0b01111110 | cpu.prepare_speed_switch;
 			break;
 
 		case 0xFF4F:
-			return ppu.vram_bank;
+			return ppu.vram_bank | 0b01111110;
 			break;
 
 		case 0xFF55:
-			return ppu.transfer_length | ppu.hdma_transfer_is_active << 7;
+			if (ppu.hdma_transfer_active == 0) 
+			{
+				return 0xFF;
+			} 
+			else 	
+			{
+				return ppu.hdma_length;
+			}
 			break;
 
 		case 0xFF6C:
 			return ppu.obj_prio_mode;
+			break;
+
+		case 0xFF68:
+			return (ppu.bgpi_auto_inc << 7) | ppu.bgpi | 0b01000000;
+
+		case 0xFF69:
+			return ppu.bgpd[ppu.bgpi];
+			break;
+
+		case 0xFF6A:
+			return (ppu.obpi_auto_inc << 7) | ppu.obpi | 0b01000000;
+			break;
+			
+		case 0xFF6B:
+			return ppu.obpd[ppu.obpi];
 			break;
 
 		case 0xFF70:
@@ -456,6 +474,8 @@ void write_io(u16 address, u8 value)
 			{
 				ppu.stat.mode_flag = 0;
 				ppu.ly = 0;
+				if (ppu.stat.lyc_ly_int_enable && ppu.stat.lyc_ly_flag)
+					cpu.interrupt_flag.stat = 1;
 			}
 			break;
 
@@ -516,36 +536,66 @@ void write_io(u16 address, u8 value)
 			break;
 
 		case 0xFF51:
-			ppu.hdma1_2 = (value << 8) | (ppu.hdma1_2 & 0xFF);
+			ppu.hdma_source = (value << 8) | (ppu.hdma_source & 0xFF);
 			break;
 
 		case 0xFF52: // lower 4 bits of address are ignored
-			ppu.hdma1_2 = (ppu.hdma1_2 & 0xFF00) | (value & 0xF0);
+			ppu.hdma_source = (ppu.hdma_source & 0xFF00) | (value & 0xF0);
 			break;
 
 		case 0xFF53:
-			ppu.hdma3_4 = (value << 8) | (ppu.hdma3_4 & 0xFF);
+			ppu.hdma_destination = ((value & 0x1F) << 8) | (ppu.hdma_destination & 0xFF);
 			break;
 
 		case 0xFF54: // lower 4 bits of address are ignored
-			ppu.hdma3_4 = (ppu.hdma3_4 & 0xFF00) | (value & 0xF0);
+			ppu.hdma_destination = (ppu.hdma_destination & 0x1F00) | (value & 0xF0);
 			break;
 
-		case 0xFF55:
-			ppu.transfer_length = value & 0x7F;
-			ppu.transfer_mode = value >> 7;
+		case 0xFF55: // Writing to this register starts the DMA transfer
+			ppu.hdma_length = value & 0x7F;
+			ppu.transfer_length = (ppu.hdma_length + 1) * 0x10;
+			ppu.hdma_mode = value >> 7;
+			if (ppu.hdma_mode == 0)
+			{
+				gdma_transfer();
+				ppu.hdma_transfer_active = 0;
+			}
+			else
+			{
+				ppu.hdma_transfer_active = 1;
+				ppu.hdma_bytes_transferred = 0;
+			}
 			break;
 
 		case 0xFF56: // IR PORT
-			return 0xFF;
-			break;			
+			break;
+
+		case 0xFF68: // BGPI
+			ppu.bgpi_auto_inc = value >> 7;
+			ppu.bgpi = value & 0x3F;
+			break;
+		
+		case 0xFF69: // BGPD
+			ppu.bgpd[ppu.bgpi] = value;
+			ppu.bgpi = (ppu.bgpi + ppu.bgpi_auto_inc) & 0x3F;
+			break;
+
+		case 0xFF6A: // OBPI
+			ppu.obpi_auto_inc = value >> 7;
+			ppu.obpi = value & 0x3F;
+			break;
+
+		case 0xFF6B: // OBPD
+			ppu.obpd[ppu.obpi] = value;
+			ppu.obpi = (ppu.obpi + ppu.obpi_auto_inc) & 0x3F;
+			break;
 
 		case 0xFF6C:
 			ppu.obj_prio_mode = value & 1;
 			break;
 
 		case 0xFF70:
-			if (gb.cbg_mode = true)
+			if (gb.cgb_mode = true)
 				cpu.wram_bank = value & 0x07 ? value & 0x07 : 1;
 			else
 				cpu.wram_bank = 1;

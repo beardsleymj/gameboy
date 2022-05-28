@@ -238,11 +238,13 @@ void draw_memory_editor()
 			size = 0x2000;
 			break;
 		case 3:
-			data = ppu.vram;
-			size = 0x2000;
+			data = ppu.vram[0];
+			size = 0x4000;
 			break;
 		case 4:
 			data = (u8*)apu.samples.buffer;
+			size = sizeof(apu.samples.buffer);
+			break;			
 	}
 	ImGui::Begin("Memory Editor", &show_memory_editor);
 	ImGui::RadioButton("ROM", &e, 0); ImGui::SameLine();
