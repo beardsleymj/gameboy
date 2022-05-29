@@ -30,12 +30,13 @@ typedef struct
 
 	u32 ram_size;
 	u8 ram_banks;
+	u16 ram_bank_mask;
 	u8* sram;
 	u8* ram_bank_ptr;
 
 	FILE* savefile;
 
-	u16 rom_address_pins_mask;
+	u16 rom_bank_mask;
 	bool ram_bank_enable;
 	u8 banking_mode;
 

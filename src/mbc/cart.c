@@ -23,15 +23,15 @@ void cart_load(char* rom_path)
 	fread(&code, 1, 1, rom_file);
 	switch (code)
 	{
-		case 0: cart.rom_size = 2   * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x01; break;
-		case 1: cart.rom_size = 4   * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x03; break;
-		case 2: cart.rom_size = 8   * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x07; break;
-		case 3: cart.rom_size = 16  * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x0F; break;
-		case 4: cart.rom_size = 32  * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x1F; break;
-		case 5: cart.rom_size = 64  * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x3F; break;
-		case 6: cart.rom_size = 128 * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x7F; break;
-		case 7: cart.rom_size = 256 * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0xFF; break;
-		case 8: cart.rom_size = 512 * ROM_BANK_SIZE; cart.rom_address_pins_mask = 0x1FF; break;
+		case 0: cart.rom_size = 2   * ROM_BANK_SIZE; cart.rom_bank_mask = 0x01; break;
+		case 1: cart.rom_size = 4   * ROM_BANK_SIZE; cart.rom_bank_mask = 0x03; break;
+		case 2: cart.rom_size = 8   * ROM_BANK_SIZE; cart.rom_bank_mask = 0x07; break;
+		case 3: cart.rom_size = 16  * ROM_BANK_SIZE; cart.rom_bank_mask = 0x0F; break;
+		case 4: cart.rom_size = 32  * ROM_BANK_SIZE; cart.rom_bank_mask = 0x1F; break;
+		case 5: cart.rom_size = 64  * ROM_BANK_SIZE; cart.rom_bank_mask = 0x3F; break;
+		case 6: cart.rom_size = 128 * ROM_BANK_SIZE; cart.rom_bank_mask = 0x7F; break;
+		case 7: cart.rom_size = 256 * ROM_BANK_SIZE; cart.rom_bank_mask = 0xFF; break;
+		case 8: cart.rom_size = 512 * ROM_BANK_SIZE; cart.rom_bank_mask = 0x1FF; break;
 		default: 
 			printf("Invalid ROM size code: %d\n", code);
 			exit(-1);
@@ -78,10 +78,12 @@ void cart_load(char* rom_path)
 		case 3: cart.ram_banks = 4; break;
 		case 4: cart.ram_banks = 16; break;
 		case 5: cart.ram_banks = 8; break;
-		default: exit(-3);
-	}
-	
+		default: 
+			printf("Unknown RAM Size\n");
+			exit(1);
+	}	
 	cart.ram_size = cart.ram_banks * RAM_BANK_SIZE;
+	cart.ram_bank_mask = cart.ram_banks ? (cart.ram_banks - 1) : 0;
 	cart.sram = calloc(1, cart.ram_size);
 
 	// load save
