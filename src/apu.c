@@ -1,6 +1,7 @@
 #include "types.h"
 #include "apu.h"
 #include "gb_system.h"
+#include "cpu.h"
 #include "audio.h"
 
 #include <stdio.h>
@@ -23,12 +24,9 @@ void apu_init()
 
 void apu_run()
 {
-	// sync apu with cpu. I read that the apu runs at half cpu speed so i think 
-	// this can be run half as much and the frequency timers adjusted eventually
-	while (gb.cycles >= apu.cycles)
+	while (apu.cycles <= gb.cycles)
 	{
-		apu.cycles++;
-		
+		apu.cycles += 1;
 		square1_run();
 		square2_run();
 		wave_run();
@@ -39,7 +37,7 @@ void apu_run()
 	while (gb.cycles - apu.last_frame_sequencer_sync >= 8192)
 	{
 		apu.last_frame_sequencer_sync += 8192;
-		apu.frame_sequencer = apu.frame_sequencer + 1;
+		apu.frame_sequencer++;
 		apu.frame_sequencer &= 0b111;
 
 		// clock stuff based on frame sequencer

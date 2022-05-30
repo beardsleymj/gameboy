@@ -32,7 +32,7 @@ void update_tima()
 
 		if (cpu.tima == 0xFF)
 		{
-			cpu.tima = cpu.tima;
+			cpu.tima = cpu.tma;
 			cpu.interrupt_flag.timer = 1;
 		}
 

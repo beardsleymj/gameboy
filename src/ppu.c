@@ -41,18 +41,18 @@ void ppu_run()
 // Mode 0
 void hblank() 
 {
-	ppu.cycles += 207;
-	
+	ppu.cycles += 207 * (cpu.double_speed + 1);
+
 	if (ppu.hdma_transfer_active)
 		hdma_transfer();
-	
+
 	ppu.stat.mode_flag = 0;
-	
+
 	if (ppu.ly == 143)
 		ppu.next_mode = 1;
 	else 
 		ppu.next_mode = 2;
-	
+
 	if (ppu.stat.hblank_int_enable)
 		cpu.interrupt_flag.stat = 1;
 	
@@ -61,8 +61,10 @@ void hblank()
 // Mode 1
 void vblank() 
 {
-	ppu.cycles += 456;
+	ppu.cycles += 456 * (cpu.double_speed + 1);
+
 	increment_ly();
+
 	if (ppu.ly == 144) 
 	{
 		ppu.wy_ly_flag = 0;
@@ -86,16 +88,14 @@ void vblank()
 // Mode 2
 void oam_search() 
 {
+	ppu.cycles += 80 * (cpu.double_speed + 1);
+
 	increment_ly();
 	ppu.stat.mode_flag = 2;
 	ppu.next_mode = 3;
+
 	if (ppu.stat.oam_int_enable)
 		cpu.interrupt_flag.stat = 1;
-	ppu.cycles += 80;
-
-	if (ppu.ly == 0) 
-	{
-	}
 	
 	ppu.oam_buffer_size = 0;
 	for (u16 loc = 0; loc < 0xA0; loc += 4)	
@@ -128,9 +128,9 @@ int sprite_compare(const sprite_t* a, const sprite_t* b)
  //Mode 3
  void draw_scanline() 
 {
+	 ppu.cycles += 175 * (cpu.double_speed + 1);
 	 ppu.stat.mode_flag = 3;
 	 ppu.next_mode = 0;
-	 ppu.cycles += 175;
 	
 	 u8 scanline[160] = { 0 };
 	 if (gb.cgb_mode || ppu.lcdc.bg_win_enable)
