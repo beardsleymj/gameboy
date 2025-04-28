@@ -367,3 +367,4 @@ dmg01.gb
 
 # Imgui Config
 imgui.ini
+/bootrom/cgb0_boot.bin
